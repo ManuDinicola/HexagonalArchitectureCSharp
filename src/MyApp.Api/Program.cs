@@ -16,3 +16,9 @@ app.UseExceptionHandler(); // unexpected exceptions are bugs -> 500 ProblemDetai
 app.MapOrderEndpoints();
 
 await app.RunAsync();
+
+// Top-level statements generate Program; the SDK decides its accessibility (it changed between previews). Pin it: the Api exports nothing.
+internal sealed partial class Program
+{
+    private Program() { }
+}

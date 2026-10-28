@@ -43,7 +43,7 @@ obj/x86/
 [Aa][Rr][Mm]64[Ee][Cc]/
 bld/
 [Oo]bj/
-[Oo]ut/
+# (no generic out/ rule: it would hide Application/Ports/Out)
 [Ll]og/
 [Ll]ogs/
 
