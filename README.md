@@ -37,7 +37,7 @@ Then add an endpoint in `MyApp.Api/Endpoints`. Read [ARCHITECTURE.md](ARCHITECTU
 
 ## What fails the build
 
-Every rule below is enforced by the compiler, an analyzer or a test. CI (`.github/workflows/ci.yml`) runs `dotnet build` and `dotnet test` on every pull request, so none of it depends on anyone remembering to run it.
+Every rule below is enforced by the compiler, an analyzer or a test: run `dotnet build` and `dotnet test` before every commit.
 
 | Mistake | Caught by |
 |---|---|

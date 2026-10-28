@@ -9,7 +9,7 @@ dotnet build     # warnings and banned APIs are errors
 dotnet test      # domain, application, infrastructure, end-to-end API and architecture tests
 ```
 
-Run both before every commit. CI runs the same two commands.
+Run both before every commit.
 
 ## Rules that cannot be negotiated
 
