@@ -13,22 +13,22 @@ internal sealed class Dispatcher(IServiceProvider services) : IDispatcher
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var invoker = (Invoker<TResponse>)Invokers.GetOrAdd(request.GetType(), static (requestType, _) =>
+        var invoker = (IInvoker<TResponse>)Invokers.GetOrAdd(request.GetType(), static (requestType, _) =>
             Activator.CreateInstance(typeof(Invoker<,>).MakeGenericType(requestType, typeof(TResponse)))!, 0);
 
         return invoker.InvokeAsync(request, services, cancellationToken);
     }
 
-    private abstract class Invoker<TResponse> where TResponse : IResult<TResponse>
+    private interface IInvoker<TResponse> where TResponse : IResult<TResponse>
     {
-        public abstract Task<TResponse> InvokeAsync(IRequest<TResponse> request, IServiceProvider services, CancellationToken ct);
+        Task<TResponse> InvokeAsync(IRequest<TResponse> request, IServiceProvider services, CancellationToken ct);
     }
 
-    private sealed class Invoker<TRequest, TResponse> : Invoker<TResponse>
+    private sealed class Invoker<TRequest, TResponse> : IInvoker<TResponse>
         where TRequest : IRequest<TResponse>
         where TResponse : IResult<TResponse>
     {
-        public override Task<TResponse> InvokeAsync(IRequest<TResponse> request, IServiceProvider services, CancellationToken ct)
+        public Task<TResponse> InvokeAsync(IRequest<TResponse> request, IServiceProvider services, CancellationToken ct)
         {
             var typedRequest = (TRequest)request;
             var handler = services.GetRequiredService<IRequestHandler<TRequest, TResponse>>();

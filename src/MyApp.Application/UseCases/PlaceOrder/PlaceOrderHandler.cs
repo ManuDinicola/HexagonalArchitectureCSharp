@@ -14,12 +14,19 @@ internal sealed class PlaceOrderHandler(IOrderRepository orders, TimeProvider ti
         foreach (var line in request.Lines)
         {
             var created = OrderLine.Create(line.Sku, line.Quantity, line.UnitPrice);
-            if (created.IsFailure) return Result.Failure<Guid>(created.Errors[0]);
+            if (created.IsFailure)
+            {
+                return Result.Failure<Guid>(created.Errors[0]);
+            }
+
             lines.Add(created.Unwrap());
         }
 
         var order = Order.Place(request.CustomerId, lines, time.GetUtcNow());
-        if (order.IsFailure) return Result.Failure<Guid>(order.Errors[0]);
+        if (order.IsFailure)
+        {
+            return Result.Failure<Guid>(order.Errors[0]);
+        }
 
         await orders.AddAsync(order.Unwrap(), cancellationToken);
         return order.Unwrap().Id;

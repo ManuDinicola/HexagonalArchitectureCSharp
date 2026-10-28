@@ -5,7 +5,7 @@ namespace MyApp.Architecture.Tests;
 public partial class SourceLayoutTests
 {
     // Top-level declarations start at column 0 (file-scoped namespaces). Nested types are indented, so they are ignored.
-    [GeneratedRegex(@"^(?:(?:public|internal|file)\s+)?(?:(?:sealed|static|abstract|partial|readonly)\s+)*(?:class|record|struct|interface|enum|union|delegate)\b", RegexOptions.Multiline)]
+    [GeneratedRegex(@"^(?:(?:public|internal|file)\s+)?(?:(?:sealed|static|abstract|partial|readonly)\s+)*(?:class|record|struct|interface|enum|union|delegate)\b", RegexOptions.Multiline, matchTimeoutMilliseconds: 1000)]
     private static partial Regex TopLevelType();
 
     [Fact]
@@ -26,7 +26,11 @@ public partial class SourceLayoutTests
     private static string FindRepoRoot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null && dir.GetFiles("*.slnx").Length == 0) dir = dir.Parent;
+        while (dir is not null && dir.GetFiles("*.slnx").Length == 0)
+        {
+            dir = dir.Parent;
+        }
+
         return dir?.FullName ?? throw new InvalidOperationException("Could not find the .slnx from " + AppContext.BaseDirectory);
     }
 }

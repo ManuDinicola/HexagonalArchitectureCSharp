@@ -25,8 +25,16 @@ public sealed class Order
     /// <summary>The only way to create an order, so invariants cannot be skipped.</summary>
     public static Result<Order> Place(string customerId, IReadOnlyCollection<OrderLine> lines, DateTimeOffset placedAt)
     {
-        if (string.IsNullOrWhiteSpace(customerId)) return OrderErrors.CustomerRequired;
-        if (lines.Count == 0) return OrderErrors.NoLines;
+        if (string.IsNullOrWhiteSpace(customerId))
+        {
+            return OrderErrors.CustomerRequired;
+        }
+
+        if (lines.Count == 0)
+        {
+            return OrderErrors.NoLines;
+        }
+
 
         return new Order(Guid.NewGuid(), customerId.Trim(), placedAt, lines);
     }

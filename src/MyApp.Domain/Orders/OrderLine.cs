@@ -20,9 +20,21 @@ public sealed class OrderLine
 
     public static Result<OrderLine> Create(string sku, int quantity, decimal unitPrice)
     {
-        if (string.IsNullOrWhiteSpace(sku)) return OrderErrors.SkuRequired;
-        if (quantity <= 0) return OrderErrors.InvalidQuantity;
-        if (unitPrice < 0) return OrderErrors.InvalidUnitPrice;
+        if (string.IsNullOrWhiteSpace(sku))
+        {
+            return OrderErrors.SkuRequired;
+        }
+
+        if (quantity <= 0)
+        {
+            return OrderErrors.InvalidQuantity;
+        }
+
+        if (unitPrice < 0)
+        {
+            return OrderErrors.InvalidUnitPrice;
+        }
+
 
         return new OrderLine(sku.Trim(), quantity, unitPrice);
     }

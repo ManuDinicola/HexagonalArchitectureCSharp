@@ -41,12 +41,14 @@ public class DependencyRulesTests
     [Fact]
     public void Project_references_follow_the_hexagon()
     {
-        static string[] Refs(System.Reflection.Assembly a) =>
-            a.GetReferencedAssemblies().Select(r => r.Name!).Where(n => n.StartsWith("MyApp.")).ToArray();
+        static string[] Refs(System.Reflection.Assembly a)
+        {
+            return [.. a.GetReferencedAssemblies().Select(r => r.Name!).Where(n => n.StartsWith("MyApp.", StringComparison.Ordinal))];
+        }
 
         Refs(Layers.DomainAssembly).ShouldBeEmpty();
         Refs(Layers.ApplicationAssembly).ShouldBe([Layers.Domain]);
-        Refs(Layers.InfrastructureAssembly).ShouldNotContain(Layers.Api);
+        Refs(Layers.InfrastructureAssembly).ShouldNotContain(Layers.Api, StringComparer.Ordinal);
     }
 
     [Fact]

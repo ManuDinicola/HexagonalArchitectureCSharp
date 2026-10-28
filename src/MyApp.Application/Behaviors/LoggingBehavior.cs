@@ -4,7 +4,7 @@ using MyApp.Domain.Common;
 
 namespace MyApp.Application.Behaviors;
 
-internal sealed class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TRequest, TResponse>> logger)
+internal sealed partial class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TRequest, TResponse>> logger)
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
     where TResponse : IResult<TResponse>
@@ -12,23 +12,28 @@ internal sealed class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavi
     public async Task<TResponse> HandleAsync(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         var name = typeof(TRequest).Name;
-        logger.LogInformation("Handling {Request}", name);
+        LogHandling(name);
 
-        try
+        var response = await next();
+
+        if (response.IsSuccess)
         {
-            var response = await next();
-
-            if (response.IsSuccess)
-                logger.LogInformation("Handled {Request}", name);
-            else
-                logger.LogWarning("{Request} failed: {Errors}", name, string.Join(", ", response.Errors.Select(e => e.Code)));
-
-            return response;
+            LogHandled(name);
         }
-        catch (Exception ex)
+        else
         {
-            logger.LogError(ex, "{Request} threw an unexpected exception", name);
-            throw;
+            LogFailed(name, string.Join(", ", response.Errors.Select(e => e.Code)));
         }
+
+        return response;
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Handling {Request}")]
+    private partial void LogHandling(string request);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Handled {Request}")]
+    private partial void LogHandled(string request);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "{Request} failed: {Errors}")]
+    private partial void LogFailed(string request, string errors);
 }

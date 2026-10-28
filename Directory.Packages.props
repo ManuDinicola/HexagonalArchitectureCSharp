@@ -8,7 +8,10 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="11.0.0-rc.3.26522.148" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="11.0.0-rc.3.26522.148" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="11.0.0-rc.3.26522.148" />
-    <!-- Guardrails -->
+    <!-- Guardrails and analyzers (same set as the WorkflowEg repo) -->
+    <PackageVersion Include="Roslynator.Analyzers" Version="5.0.1" />
+    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.316" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
     <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="4.14.0" />
     <!-- Tests -->
     <PackageVersion Include="FakeItEasy" Version="9.0.1" />

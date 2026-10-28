@@ -1,3 +1,3 @@
 namespace MyApp.Api.Contracts;
 
-public sealed record OrderLineResponse(string Sku, int Quantity, decimal UnitPrice);
+internal sealed record OrderLineResponse(string Sku, int Quantity, decimal UnitPrice);

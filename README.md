@@ -47,6 +47,7 @@ Then add an endpoint in `MyApp.Api/Endpoints`. Read [ARCHITECTURE.md](ARCHITECTU
 | Entity with public setter or public constructor | architecture tests |
 | Request without exactly one handler | architecture tests |
 | Two types in one file | architecture tests (one class/record/interface/enum per file) |
+| Code smells, style, naming, missing braces, complexity | `AnalysisMode=All` + Roslynator, Meziantou, Sonar analyzers (same set as the WorkflowEg repo), tuned in `.editorconfig` |
 | Warnings (nullable, unused, ...) | `TreatWarningsAsErrors` |
 
 Note on the two layers: the Roslyn banned-API analyzer flags *uses* (calls, `new`, `typeof`) with a precise

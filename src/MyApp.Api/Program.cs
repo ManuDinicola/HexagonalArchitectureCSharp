@@ -14,4 +14,4 @@ var app = builder.Build();
 app.UseExceptionHandler(); // unexpected exceptions are bugs -> 500 ProblemDetails
 app.MapOrderEndpoints();
 
-app.Run();
+await app.RunAsync();

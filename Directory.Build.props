@@ -6,12 +6,26 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors>$(WarningsAsErrors);CS8509</WarningsAsErrors>
     <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisMode>All</AnalysisMode>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <Deterministic>true</Deterministic>
+    <InvariantGlobalization>true</InvariantGlobalization>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 
     <IsSourceProject Condition="$(MSBuildProjectDirectory.StartsWith('$(MSBuildThisFileDirectory)src'))">true</IsSourceProject>
     <IsTestProject Condition="$(MSBuildProjectDirectory.StartsWith('$(MSBuildThisFileDirectory)tests'))">true</IsTestProject>
   </PropertyGroup>
+
+  <!-- Code-quality analyzers for every project. Rules are tuned in .editorconfig. -->
+  <ItemGroup>
+    <PackageReference Include="Roslynator.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="Meziantou.Analyzer" PrivateAssets="all" />
+    <PackageReference Include="SonarAnalyzer.CSharp" PrivateAssets="all" />
+  </ItemGroup>
 
   <!--
     Banned-API guardrail for every production project (src/).

@@ -15,7 +15,7 @@ internal static class OrderEndpoints
         {
             var command = new PlaceOrderCommand(
                 body.CustomerId,
-                body.Lines.Select(l => new PlaceOrderLine(l.Sku, l.Quantity, l.UnitPrice)).ToList());
+                [.. body.Lines.Select(l => new PlaceOrderLine(l.Sku, l.Quantity, l.UnitPrice))]);
 
             var result = await dispatcher.SendAsync(command, ct);
 
@@ -34,5 +34,5 @@ internal static class OrderEndpoints
 
     private static OrderResponse ToResponse(OrderDto o) => new(
         o.Id, o.CustomerId, o.PlacedAt, o.Total,
-        o.Lines.Select(l => new OrderLineResponse(l.Sku, l.Quantity, l.UnitPrice)).ToList());
+        [.. o.Lines.Select(l => new OrderLineResponse(l.Sku, l.Quantity, l.UnitPrice))]);
 }

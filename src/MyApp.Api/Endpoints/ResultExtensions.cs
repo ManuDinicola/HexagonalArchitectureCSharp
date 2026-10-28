@@ -12,8 +12,8 @@ internal static class ResultExtensions
         if (errors.All(e => e.Type == ErrorType.Validation))
         {
             var byField = errors
-                .GroupBy(e => e.Code)
-                .ToDictionary(g => g.Key, g => g.Select(e => e.Message).ToArray());
+                .GroupBy(e => e.Code, StringComparer.Ordinal)
+                .ToDictionary(g => g.Key, g => g.Select(e => e.Message).ToArray(), StringComparer.Ordinal);
             return Results.ValidationProblem(byField);
         }
 
@@ -23,7 +23,7 @@ internal static class ResultExtensions
             ErrorType.NotFound => StatusCodes.Status404NotFound,
             ErrorType.Conflict => StatusCodes.Status409Conflict,
             ErrorType.Validation => StatusCodes.Status400BadRequest,
-            _ => StatusCodes.Status500InternalServerError,
+            ErrorType.Failure or _ => StatusCodes.Status500InternalServerError,
         };
 
         return Results.Problem(statusCode: status, title: first.Code, detail: first.Message);

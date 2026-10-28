@@ -16,11 +16,15 @@ public static class DependencyInjection
 
         // Handlers and validators are found by scanning; nobody registers them by hand.
         foreach (var type in typeof(DependencyInjection).Assembly.GetTypes().Where(t => t is { IsClass: true, IsAbstract: false }))
-        foreach (var contract in type.GetInterfaces().Where(i => i.IsGenericType))
         {
-            var definition = contract.GetGenericTypeDefinition();
-            if (definition == typeof(IRequestHandler<,>) || definition == typeof(IValidator<>))
-                services.AddScoped(contract, type);
+            foreach (var contract in type.GetInterfaces().Where(i => i.IsGenericType))
+            {
+                var definition = contract.GetGenericTypeDefinition();
+                if (definition == typeof(IRequestHandler<,>) || definition == typeof(IValidator<>))
+                {
+                    services.AddScoped(contract, type);
+                }
+            }
         }
 
         return services;

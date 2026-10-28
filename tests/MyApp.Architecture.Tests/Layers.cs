@@ -14,7 +14,7 @@ internal static class Layers
     public static readonly Assembly DomainAssembly = typeof(Domain.Common.Result).Assembly;
     public static readonly Assembly ApplicationAssembly = typeof(IDispatcher).Assembly;
     public static readonly Assembly InfrastructureAssembly = typeof(Infrastructure.DependencyInjection).Assembly;
-    public static readonly Assembly ApiAssembly = typeof(Api.Contracts.OrderResponse).Assembly;
+    public static readonly Assembly ApiAssembly = Assembly.Load(Api); // its types are internal
 
     public const string DomainCommon = "MyApp.Domain.Common";
     public const string PortsOut = "MyApp.Application.Ports.Out";
@@ -24,10 +24,11 @@ internal static class Layers
 
     /// <summary>Every Domain namespace except Common (Result/Error): aggregates, entities, value objects.</summary>
     public static string[] DomainEntityNamespaces() =>
-        DomainAssembly.GetTypes()
+    [
+        .. DomainAssembly.GetTypes()
             .Select(t => t.Namespace)
             .OfType<string>()
-            .Where(ns => ns != DomainCommon)
-            .Distinct()
-            .ToArray();
+            .Where(ns => !string.Equals(ns, DomainCommon, StringComparison.Ordinal))
+            .Distinct(StringComparer.Ordinal),
+    ];
 }

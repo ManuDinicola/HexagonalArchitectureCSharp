@@ -46,7 +46,7 @@ public class PlaceOrderTests : IAsyncLifetime
     {
         await _app.SendAsync(new PlaceOrderCommand("", []));
 
-        _app.Logs.Messages.First().ShouldBe("Information: Handling PlaceOrderCommand");
+        _app.Logs.Messages[0].ShouldBe("Information: Handling PlaceOrderCommand");
         _app.Logs.Messages.ShouldContain(m => m.StartsWith("Warning: PlaceOrderCommand failed") && m.Contains("CustomerId"));
     }
 

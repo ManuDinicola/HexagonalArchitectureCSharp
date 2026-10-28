@@ -10,13 +10,16 @@ internal sealed class GetOrderHandler(IOrderRepository orders) : IRequestHandler
     public async Task<Result<OrderDto>> HandleAsync(GetOrderQuery request, CancellationToken cancellationToken)
     {
         var order = await orders.GetByIdAsync(request.OrderId, cancellationToken);
-        if (order is null) return OrderErrors.NotFound(request.OrderId);
+        if (order is null)
+        {
+            return OrderErrors.NotFound(request.OrderId);
+        }
 
         return new OrderDto(
             order.Id,
             order.CustomerId,
             order.PlacedAt,
             order.Total,
-            order.Lines.Select(l => new OrderLineDto(l.Sku, l.Quantity, l.UnitPrice)).ToList());
+            [.. order.Lines.Select(l => new OrderLineDto(l.Sku, l.Quantity, l.UnitPrice))]);
     }
 }

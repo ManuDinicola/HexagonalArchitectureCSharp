@@ -1,4 +1,3 @@
-using MyApp.Domain.Common;
 using MyApp.Domain.Orders;
 
 namespace MyApp.Domain.Tests;

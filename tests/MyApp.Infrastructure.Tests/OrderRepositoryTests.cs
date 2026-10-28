@@ -31,7 +31,9 @@ public sealed class OrderRepositoryTests : IDisposable
             placedAt).Unwrap();
 
         await using (var write = NewContext())
+        {
             await new OrderRepository(write).AddAsync(order, CancellationToken.None);
+        }
 
         await using var read = NewContext(); // fresh context: nothing comes from the change tracker
         var loaded = await new OrderRepository(read).GetByIdAsync(order.Id, CancellationToken.None);

@@ -44,7 +44,7 @@ public class DesignRulesTests
     public void Ports_are_one_per_aggregate_not_generic()
     {
         var generic = Layers.ApplicationAssembly.GetTypes()
-            .Where(t => t.Namespace == Layers.PortsOut && t.IsGenericTypeDefinition);
+            .Where(t => string.Equals(t.Namespace, Layers.PortsOut, StringComparison.Ordinal) && t.IsGenericTypeDefinition);
 
         generic.ShouldBeEmpty();
     }
@@ -71,7 +71,9 @@ public class DesignRulesTests
             .ToList();
 
         foreach (var request in requests)
+        {
             handled.Count(h => h == request).ShouldBe(1, $"{request.Name} must have exactly one IRequestHandler.");
+        }
     }
 
     [Fact]
@@ -89,8 +91,8 @@ public class DesignRulesTests
     }
 
     private static bool IsEntity(Type t) =>
-        t is { IsClass: true } && t.Namespace is not null && t.Namespace != Layers.DomainCommon
-        && !(t.IsAbstract && t.IsSealed) // static classes such as OrderErrors
+        t is { IsClass: true } && t.Namespace is not null && !string.Equals(t.Namespace, Layers.DomainCommon
+, StringComparison.Ordinal) && !(t.IsAbstract && t.IsSealed) // static classes such as OrderErrors
         && !t.Name.StartsWith('<');
 
     private static bool ImplementsOpen(Type type, Type openInterface) =>

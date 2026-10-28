@@ -12,7 +12,9 @@ internal sealed class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValid
     {
         var errors = new List<Error>();
         foreach (var validator in validators)
+        {
             errors.AddRange(await validator.ValidateAsync(request, cancellationToken));
+        }
 
         return errors.Count > 0 ? TResponse.FromErrors(errors) : await next();
     }
