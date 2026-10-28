@@ -45,6 +45,27 @@ public class GuardrailIntegrityTests
     }
 
     [Fact]
+    public void Local_gate_and_agent_protection_still_exist()
+    {
+        // There is no CI: the pre-commit hook and the Claude Code deny rules are the other enforcement points.
+        var hook = Read(".githooks/pre-commit");
+        hook.ShouldContain("dotnet test");
+        hook.ShouldContain("GUARDRAIL_CHANGE");
+
+        var settings = Read(".claude/settings.json");
+        settings.ShouldContain("MyApp.Architecture.Tests");
+        settings.ShouldContain("BannedSymbols");
+        settings.ShouldContain(".editorconfig");
+    }
+
+    [Fact]
+    public void Line_endings_are_pinned_to_lf()
+    {
+        // .editorconfig says LF; without this, Windows checkouts convert to CRLF and every diff is noisy.
+        Read(".gitattributes").ShouldContain("eol=lf");
+    }
+
+    [Fact]
     public void Layer_specific_banned_lists_still_exist()
     {
         foreach (var project in new[] { Layers.Domain, Layers.Application, Layers.Infrastructure, Layers.Api })
