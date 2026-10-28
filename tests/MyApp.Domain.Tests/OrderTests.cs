@@ -15,11 +15,11 @@ public class OrderTests
     {
         var result = Order.Place("  cust-1 ", [Line(qty: 2, price: 5m), Line("SKU-2", 1, 3m)], Now);
 
-        Assert.True(result.IsSuccess);
-        Assert.Equal("cust-1", result.Value.CustomerId);
-        Assert.Equal(Now, result.Value.PlacedAt);
-        Assert.NotEqual(Guid.Empty, result.Value.Id);
-        Assert.Equal(13m, result.Value.Total);
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.CustomerId.ShouldBe("cust-1");
+        result.Value.PlacedAt.ShouldBe(Now);
+        result.Value.Id.ShouldNotBe(Guid.Empty);
+        result.Value.Total.ShouldBe(13m);
     }
 
     [Theory]
@@ -29,8 +29,8 @@ public class OrderTests
     {
         var result = Order.Place(customer, [Line()], Now);
 
-        Assert.True(result.IsFailure);
-        Assert.Equal(OrderErrors.CustomerRequired, result.Errors[0]);
+        result.IsFailure.ShouldBeTrue();
+        result.Errors[0].ShouldBe(OrderErrors.CustomerRequired);
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class OrderTests
     {
         var result = Order.Place("cust-1", [], Now);
 
-        Assert.Equal(OrderErrors.NoLines, Assert.Single(result.Errors));
+        result.Errors.ShouldHaveSingleItem().ShouldBe(OrderErrors.NoLines);
     }
 
     [Theory]
@@ -50,7 +50,7 @@ public class OrderTests
     {
         var result = OrderLine.Create(sku, quantity, (decimal)price);
 
-        Assert.Equal(expectedCode, Assert.Single(result.Errors).Code);
+        result.Errors.ShouldHaveSingleItem().Code.ShouldBe(expectedCode);
     }
 
     [Fact]
@@ -58,6 +58,6 @@ public class OrderTests
     {
         var order = Order.Place("cust-1", [Line()], Now).Value;
 
-        Assert.False(order.Lines is ICollection<OrderLine> { IsReadOnly: false });
+        (order.Lines is ICollection<OrderLine> { IsReadOnly: false }).ShouldBeFalse();
     }
 }

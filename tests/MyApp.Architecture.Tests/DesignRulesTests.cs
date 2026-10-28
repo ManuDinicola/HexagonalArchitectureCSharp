@@ -8,14 +8,14 @@ namespace MyApp.Architecture.Tests;
 public class DesignRulesTests
 {
     private static void AssertNoViolations(TestResult result) =>
-        Assert.True(result.IsSuccessful, "Violating types: " + string.Join(", ", result.FailingTypeNames ?? []));
+        result.IsSuccessful.ShouldBeTrue("Violating types: " + string.Join(", ", result.FailingTypeNames ?? []));
 
     [Fact]
     public void Everything_in_Infrastructure_is_internal_except_AddInfrastructure()
     {
         var publicTypes = Layers.InfrastructureAssembly.GetExportedTypes().Select(t => t.FullName);
 
-        Assert.Equal(["MyApp.Infrastructure.DependencyInjection"], publicTypes);
+        publicTypes.ShouldBe(["MyApp.Infrastructure.DependencyInjection"]);
     }
 
     [Fact]
@@ -46,7 +46,7 @@ public class DesignRulesTests
         var generic = Layers.ApplicationAssembly.GetTypes()
             .Where(t => t.Namespace == Layers.PortsOut && t.IsGenericTypeDefinition);
 
-        Assert.Empty(generic);
+        generic.ShouldBeEmpty();
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public class DesignRulesTests
             .ToList();
 
         foreach (var request in requests)
-            Assert.True(handled.Count(h => h == request) == 1, $"{request.Name} must have exactly one IRequestHandler.");
+            handled.Count(h => h == request).ShouldBe(1, $"{request.Name} must have exactly one IRequestHandler.");
     }
 
     [Fact]
@@ -79,12 +79,12 @@ public class DesignRulesTests
     {
         foreach (var type in Layers.DomainAssembly.GetTypes().Where(IsEntity))
         {
-            Assert.True(type.GetConstructors(BindingFlags.Public | BindingFlags.Instance).Length == 0,
+            type.GetConstructors(BindingFlags.Public | BindingFlags.Instance).ShouldBeEmpty(
                 $"{type.Name}: use a static factory method that enforces invariants, not a public constructor.");
 
             var settable = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.SetMethod is { IsPublic: true });
-            Assert.True(!settable.Any(), $"{type.Name}: public setters on {string.Join(", ", settable.Select(p => p.Name))}. Use private setters.");
+            settable.ShouldBeEmpty($"{type.Name}: has public setters. Use private setters.");
         }
     }
 

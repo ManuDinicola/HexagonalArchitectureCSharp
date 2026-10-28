@@ -1,6 +1,8 @@
+using FakeItEasy;
 using MyApp.Application.UseCases.GetOrder;
 using MyApp.Application.UseCases.PlaceOrder;
 using MyApp.Domain.Common;
+using MyApp.Domain.Orders;
 
 namespace MyApp.Application.Tests;
 
@@ -19,11 +21,12 @@ public class PlaceOrderTests : IAsyncLifetime
     {
         var result = await _app.SendAsync(ValidCommand());
 
-        Assert.True(result.IsSuccess);
-        var order = Assert.Single(_app.Orders.Stored.Values);
-        Assert.Equal(result.Value, order.Id);
-        Assert.Equal(_app.Clock.UtcNow, order.PlacedAt);
-        Assert.Equal(25m, order.Total);
+        result.IsSuccess.ShouldBeTrue();
+        A.CallTo(() => _app.Orders.AddAsync(A<Order>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
+        var order = _app.Saved.ShouldHaveSingleItem();
+        order.Id.ShouldBe(result.Value);
+        order.PlacedAt.ShouldBe(TestApp.Now);
+        order.Total.ShouldBe(25m);
     }
 
     [Fact]
@@ -31,11 +34,11 @@ public class PlaceOrderTests : IAsyncLifetime
     {
         var result = await _app.SendAsync(new PlaceOrderCommand("", [new PlaceOrderLine("", 0, -1m)]));
 
-        Assert.True(result.IsFailure);
-        Assert.All(result.Errors, e => Assert.Equal(ErrorType.Validation, e.Type));
-        Assert.Contains(result.Errors, e => e.Code == "CustomerId");
-        Assert.Contains(result.Errors, e => e.Code == "Lines[0].Quantity");
-        Assert.Empty(_app.Orders.Stored);
+        result.IsFailure.ShouldBeTrue();
+        result.Errors.ShouldAllBe(e => e.Type == ErrorType.Validation);
+        result.Errors.ShouldContain(e => e.Code == "CustomerId");
+        result.Errors.ShouldContain(e => e.Code == "Lines[0].Quantity");
+        A.CallTo(() => _app.Orders.AddAsync(A<Order>._, A<CancellationToken>._)).MustNotHaveHappened();
     }
 
     [Fact]
@@ -43,8 +46,8 @@ public class PlaceOrderTests : IAsyncLifetime
     {
         await _app.SendAsync(new PlaceOrderCommand("", []));
 
-        Assert.Equal("Information: Handling PlaceOrderCommand", _app.Logs.Messages.First());
-        Assert.Contains(_app.Logs.Messages, m => m.StartsWith("Warning: PlaceOrderCommand failed") && m.Contains("CustomerId"));
+        _app.Logs.Messages.First().ShouldBe("Information: Handling PlaceOrderCommand");
+        _app.Logs.Messages.ShouldContain(m => m.StartsWith("Warning: PlaceOrderCommand failed") && m.Contains("CustomerId"));
     }
 
     [Fact]
@@ -54,10 +57,10 @@ public class PlaceOrderTests : IAsyncLifetime
 
         var result = await _app.SendAsync(new GetOrderQuery(id));
 
-        Assert.True(result.IsSuccess);
-        Assert.Equal("cust-1", result.Value.CustomerId);
-        Assert.Equal(2, result.Value.Lines.Count);
-        Assert.Equal(25m, result.Value.Total);
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.CustomerId.ShouldBe("cust-1");
+        result.Value.Lines.Count.ShouldBe(2);
+        result.Value.Total.ShouldBe(25m);
     }
 
     [Fact]
@@ -65,6 +68,6 @@ public class PlaceOrderTests : IAsyncLifetime
     {
         var result = await _app.SendAsync(new GetOrderQuery(Guid.NewGuid()));
 
-        Assert.Equal(ErrorType.NotFound, Assert.Single(result.Errors).Type);
+        result.Errors.ShouldHaveSingleItem().Type.ShouldBe(ErrorType.NotFound);
     }
 }

@@ -5,7 +5,7 @@ namespace MyApp.Architecture.Tests;
 public class DependencyRulesTests
 {
     private static void AssertNoViolations(TestResult result) =>
-        Assert.True(result.IsSuccessful, "Violating types: " + string.Join(", ", result.FailingTypeNames ?? []));
+        result.IsSuccessful.ShouldBeTrue("Violating types: " + string.Join(", ", result.FailingTypeNames ?? []));
 
     [Fact]
     public void Domain_depends_on_nothing_of_ours()
@@ -44,9 +44,9 @@ public class DependencyRulesTests
         static string[] Refs(System.Reflection.Assembly a) =>
             a.GetReferencedAssemblies().Select(r => r.Name!).Where(n => n.StartsWith("MyApp.")).ToArray();
 
-        Assert.Empty(Refs(Layers.DomainAssembly));
-        Assert.Equal([Layers.Domain], Refs(Layers.ApplicationAssembly));
-        Assert.DoesNotContain(Layers.Api, Refs(Layers.InfrastructureAssembly));
+        Refs(Layers.DomainAssembly).ShouldBeEmpty();
+        Refs(Layers.ApplicationAssembly).ShouldBe([Layers.Domain]);
+        Refs(Layers.InfrastructureAssembly).ShouldNotContain(Layers.Api);
     }
 
     [Fact]

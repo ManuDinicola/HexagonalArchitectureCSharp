@@ -11,9 +11,9 @@ public class ResultTests
     {
         Result<int> result = 42;
 
-        Assert.True(result.IsSuccess);
-        Assert.Equal(42, result.Value);
-        Assert.Empty(result.Errors);
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.ShouldBe(42);
+        result.Errors.ShouldBeEmpty();
     }
 
     [Fact]
@@ -21,14 +21,14 @@ public class ResultTests
     {
         Result<int> result = Boom;
 
-        Assert.True(result.IsFailure);
-        Assert.Equal(Boom, Assert.Single(result.Errors));
-        Assert.Throws<InvalidOperationException>(() => result.Value);
+        result.IsFailure.ShouldBeTrue();
+        result.Errors.ShouldHaveSingleItem().ShouldBe(Boom);
+        Should.Throw<InvalidOperationException>(() => result.Value);
     }
 
     [Fact]
     public void Failure_without_errors_is_rejected()
     {
-        Assert.Throws<ArgumentException>(() => Result.Failure([]));
+        Should.Throw<ArgumentException>(() => Result.Failure([]));
     }
 }

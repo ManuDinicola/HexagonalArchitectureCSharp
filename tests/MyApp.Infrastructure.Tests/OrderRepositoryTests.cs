@@ -36,11 +36,11 @@ public sealed class OrderRepositoryTests : IDisposable
         await using var read = NewContext(); // fresh context: nothing comes from the change tracker
         var loaded = await new OrderRepository(read).GetByIdAsync(order.Id, CancellationToken.None);
 
-        Assert.NotNull(loaded);
-        Assert.Equal("cust-1", loaded.CustomerId);
-        Assert.Equal(placedAt, loaded.PlacedAt);
-        Assert.Equal(2, loaded.Lines.Count);
-        Assert.Equal(24m, loaded.Total);
+        loaded.ShouldNotBeNull();
+        loaded.CustomerId.ShouldBe("cust-1");
+        loaded.PlacedAt.ShouldBe(placedAt);
+        loaded.Lines.Count.ShouldBe(2);
+        loaded.Total.ShouldBe(24m);
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public sealed class OrderRepositoryTests : IDisposable
     {
         await using var db = NewContext();
 
-        Assert.Null(await new OrderRepository(db).GetByIdAsync(Guid.NewGuid(), CancellationToken.None));
+        (await new OrderRepository(db).GetByIdAsync(Guid.NewGuid(), CancellationToken.None)).ShouldBeNull();
     }
 
     [Fact]
@@ -58,8 +58,8 @@ public sealed class OrderRepositoryTests : IDisposable
         await using var provider = services.BuildServiceProvider();
         await using var scope = provider.CreateAsyncScope();
 
-        Assert.NotNull(scope.ServiceProvider.GetRequiredService<IOrderRepository>());
-        Assert.True((DateTimeOffset.UnixEpoch < scope.ServiceProvider.GetRequiredService<IClock>().UtcNow));
+        scope.ServiceProvider.GetRequiredService<IOrderRepository>().ShouldNotBeNull();
+        scope.ServiceProvider.GetRequiredService<IClock>().UtcNow.ShouldBeGreaterThan(DateTimeOffset.UnixEpoch);
     }
 
     public void Dispose() => _connection.Dispose();

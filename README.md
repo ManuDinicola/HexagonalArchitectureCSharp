@@ -49,7 +49,7 @@ lists types one by one. The NetArchTest rules cover those gaps, generically, for
 
 ## Design decisions
 
-- **No MediatR / FluentAssertions / mocking library** (licensing). A ~100-line mediator lives in `Application/Messaging`; tests use xUnit asserts and hand-written fakes.
+- **No MediatR / FluentAssertions** (licensing). A ~100-line mediator lives in `Application/Messaging`. Tests use xUnit + Shouldly (assertions) + FakeItEasy (fakes for outbound ports only; the pipeline itself is always real).
 - **Result instead of exceptions** for expected failures. Exceptions mean bugs and become a 500 ProblemDetails.
 - **One port per aggregate.** No generic repository.
 - **SQLite + `EnsureCreated`** to keep the template runnable. Switch to EF migrations when your model starts to change.

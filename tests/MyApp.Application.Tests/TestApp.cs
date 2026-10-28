@@ -1,33 +1,46 @@
+using FakeItEasy;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MyApp.Application.Messaging;
 using MyApp.Application.Ports.Out;
 using MyApp.Application.Tests.Fakes;
+using MyApp.Domain.Common;
+using MyApp.Domain.Orders;
 
 namespace MyApp.Application.Tests;
 
-/// <summary>The real DI + real pipeline; only the outbound ports are fakes.</summary>
+/// <summary>The real DI + real pipeline; only the outbound ports are FakeItEasy fakes.</summary>
 public sealed class TestApp : IAsyncDisposable
 {
     private readonly ServiceProvider _provider;
 
     public TestApp()
     {
+        // Behaves like a tiny in-memory repository.
+        A.CallTo(() => Orders.AddAsync(A<Order>._, A<CancellationToken>._))
+            .Invokes((Order o, CancellationToken _) => Saved.Add(o))
+            .Returns(Task.CompletedTask);
+        A.CallTo(() => Orders.GetByIdAsync(A<Guid>._, A<CancellationToken>._))
+            .ReturnsLazily((Guid id, CancellationToken _) => Task.FromResult(Saved.FirstOrDefault(o => o.Id == id)));
+        A.CallTo(() => Clock.UtcNow).Returns(Now);
+
         var services = new ServiceCollection();
         services.AddLogging(b => b.SetMinimumLevel(LogLevel.Trace).AddProvider(Logs));
         services.AddApplication();
         services.AddSingleton(Orders);
-        services.AddSingleton<IOrderRepository>(Orders);
-        services.AddSingleton<IClock>(Clock);
+        services.AddSingleton(Clock);
         _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
     }
 
+    public static DateTimeOffset Now { get; } = new(2026, 5, 6, 7, 8, 9, TimeSpan.Zero);
+
     public ListLoggerProvider Logs { get; } = new();
-    public FakeOrderRepository Orders { get; } = new();
-    public FakeClock Clock { get; } = new(new DateTimeOffset(2026, 5, 6, 7, 8, 9, TimeSpan.Zero));
+    public IOrderRepository Orders { get; } = A.Fake<IOrderRepository>();
+    public IClock Clock { get; } = A.Fake<IClock>();
+    public List<Order> Saved { get; } = [];
 
     public async Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request)
-        where TResponse : Domain.Common.IResult<TResponse>
+        where TResponse : IResult<TResponse>
     {
         await using var scope = _provider.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<IDispatcher>().SendAsync(request);
