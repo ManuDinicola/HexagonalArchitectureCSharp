@@ -1,4 +1,5 @@
 <Project>
+  <!-- Shared by every project. src/ and tests/ add their own on top (see their Directory.Build.props). -->
   <PropertyGroup>
     <TargetFramework>net11.0</TargetFramework>
     <!-- preview: union types (C# 15) -->
@@ -15,9 +16,6 @@
     <Deterministic>true</Deterministic>
     <InvariantGlobalization>true</InvariantGlobalization>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-
-    <IsSourceProject Condition="$(MSBuildProjectDirectory.StartsWith('$(MSBuildThisFileDirectory)src'))">true</IsSourceProject>
-    <IsTestProject Condition="$(MSBuildProjectDirectory.StartsWith('$(MSBuildThisFileDirectory)tests'))">true</IsTestProject>
   </PropertyGroup>
 
   <!-- Code-quality analyzers for every project. Rules are tuned in .editorconfig. -->
@@ -25,29 +23,5 @@
     <PackageReference Include="Roslynator.Analyzers" PrivateAssets="all" />
     <PackageReference Include="Meziantou.Analyzer" PrivateAssets="all" />
     <PackageReference Include="SonarAnalyzer.CSharp" PrivateAssets="all" />
-  </ItemGroup>
-
-  <!--
-    Banned-API guardrail for every production project (src/).
-    - src/BannedSymbols.Common.txt: rules for ALL projects (time, blocking on tasks). Written once.
-    - <project>/BannedSymbols.txt: optional, rules for that project only. Same analyzer, same RS0030 error.
-  -->
-  <ItemGroup Condition="'$(IsSourceProject)' == 'true'">
-    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" />
-    <AdditionalFiles Include="$(MSBuildThisFileDirectory)src/BannedSymbols.Common.txt" />
-    <AdditionalFiles Include="BannedSymbols.txt" Condition="Exists('BannedSymbols.txt')" />
-  </ItemGroup>
-
-  <!-- Test projects (tests/). -->
-  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
-    <IsPackable>false</IsPackable>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="Shouldly" />
-    <PackageReference Include="xunit" />
-    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
-    <Using Include="Xunit" />
-    <Using Include="Shouldly" />
   </ItemGroup>
 </Project>

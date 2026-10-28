@@ -3,6 +3,8 @@
 
 # Guardrails: changing them changes the rules for everybody. Architects review.
 /Directory.Build.props              @ManuDinicola
+/src/Directory.Build.props          @ManuDinicola
+/tests/Directory.Build.props        @ManuDinicola
 /Directory.Packages.props           @ManuDinicola
 /.editorconfig                      @ManuDinicola
 /src/BannedSymbols*.txt              @ManuDinicola
