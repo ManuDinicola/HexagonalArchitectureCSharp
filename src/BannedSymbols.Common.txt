@@ -1,16 +1,33 @@
+# One entry per overload: "M:Type.Method" without a parameter list only matches the parameterless overload.
 P:System.DateTime.Now;Use an injected TimeProvider (time.GetUtcNow()). In the Domain, pass the time in as a parameter.
 P:System.DateTime.UtcNow;Use an injected TimeProvider (time.GetUtcNow()). In the Domain, pass the time in as a parameter.
 P:System.DateTime.Today;Use an injected TimeProvider (time.GetUtcNow()). In the Domain, pass the time in as a parameter.
 P:System.DateTimeOffset.Now;Use an injected TimeProvider (time.GetUtcNow()). In the Domain, pass the time in as a parameter.
 P:System.DateTimeOffset.UtcNow;Use an injected TimeProvider (time.GetUtcNow()). In the Domain, pass the time in as a parameter.
-P:System.Threading.Tasks.Task`1.Result;Blocking on a Task can deadlock. Use await.
-M:System.Threading.Tasks.Task.Wait;Blocking on a Task can deadlock. Use await.
-M:System.Runtime.CompilerServices.TaskAwaiter.GetResult;Blocking on a Task can deadlock. Use await.
-M:System.Runtime.CompilerServices.TaskAwaiter`1.GetResult;Blocking on a Task can deadlock. Use await.
-M:System.Threading.Tasks.Task.WaitAll;Blocking on a Task can deadlock. Use await Task.WhenAll.
-M:System.Threading.Tasks.Task.WaitAny;Blocking on a Task can deadlock. Use await Task.WhenAny.
-M:System.Threading.Thread.Sleep;Blocks a thread. Use await Task.Delay (with a TimeProvider if the delay must be testable).
-M:System.Runtime.CompilerServices.ValueTaskAwaiter.GetResult;Blocking on a ValueTask can deadlock. Use await.
-M:System.Runtime.CompilerServices.ValueTaskAwaiter`1.GetResult;Blocking on a ValueTask can deadlock. Use await.
 M:System.Guid.NewGuid;Ids are passed in. In Application use Guid.CreateVersion7(time.GetUtcNow()); the Domain receives ids as parameters.
 M:System.Guid.CreateVersion7();Use Guid.CreateVersion7(time.GetUtcNow()) so ids follow the injected TimeProvider.
+P:System.Threading.Tasks.Task`1.Result;Blocking on a Task can deadlock. Use await.
+M:System.Threading.Tasks.Task.Wait();Blocking on a Task can deadlock. Use await.
+M:System.Threading.Tasks.Task.Wait(System.Int32);Blocking on a Task can deadlock. Use await.
+M:System.Threading.Tasks.Task.Wait(System.TimeSpan);Blocking on a Task can deadlock. Use await.
+M:System.Threading.Tasks.Task.Wait(System.Threading.CancellationToken);Blocking on a Task can deadlock. Use await.
+M:System.Threading.Tasks.Task.Wait(System.Int32,System.Threading.CancellationToken);Blocking on a Task can deadlock. Use await.
+M:System.Threading.Tasks.Task.Wait(System.TimeSpan,System.Threading.CancellationToken);Blocking on a Task can deadlock. Use await.
+M:System.Threading.Tasks.Task.WaitAll(System.Threading.Tasks.Task[]);Blocking on a Task can deadlock. Use await Task.WhenAll.
+M:System.Threading.Tasks.Task.WaitAll(System.Threading.Tasks.Task[],System.Int32);Blocking on a Task can deadlock. Use await Task.WhenAll.
+M:System.Threading.Tasks.Task.WaitAll(System.Threading.Tasks.Task[],System.TimeSpan);Blocking on a Task can deadlock. Use await Task.WhenAll.
+M:System.Threading.Tasks.Task.WaitAll(System.Threading.Tasks.Task[],System.Threading.CancellationToken);Blocking on a Task can deadlock. Use await Task.WhenAll.
+M:System.Threading.Tasks.Task.WaitAll(System.Threading.Tasks.Task[],System.Int32,System.Threading.CancellationToken);Blocking on a Task can deadlock. Use await Task.WhenAll.
+M:System.Threading.Tasks.Task.WaitAll(System.ReadOnlySpan{System.Threading.Tasks.Task});Blocking on a Task can deadlock. Use await Task.WhenAll.
+M:System.Threading.Tasks.Task.WaitAny(System.Threading.Tasks.Task[]);Blocking on a Task can deadlock. Use await Task.WhenAny.
+M:System.Threading.Tasks.Task.WaitAny(System.Threading.Tasks.Task[],System.Int32);Blocking on a Task can deadlock. Use await Task.WhenAny.
+M:System.Threading.Tasks.Task.WaitAny(System.Threading.Tasks.Task[],System.TimeSpan);Blocking on a Task can deadlock. Use await Task.WhenAny.
+M:System.Threading.Tasks.Task.WaitAny(System.Threading.Tasks.Task[],System.Threading.CancellationToken);Blocking on a Task can deadlock. Use await Task.WhenAny.
+M:System.Threading.Tasks.Task.WaitAny(System.Threading.Tasks.Task[],System.Int32,System.Threading.CancellationToken);Blocking on a Task can deadlock. Use await Task.WhenAny.
+M:System.Threading.Tasks.Task.WaitAny(System.ReadOnlySpan{System.Threading.Tasks.Task});Blocking on a Task can deadlock. Use await Task.WhenAny.
+M:System.Runtime.CompilerServices.TaskAwaiter.GetResult;Blocking on a Task can deadlock. Use await.
+M:System.Runtime.CompilerServices.TaskAwaiter`1.GetResult;Blocking on a Task can deadlock. Use await.
+M:System.Runtime.CompilerServices.ValueTaskAwaiter.GetResult;Blocking on a Task can deadlock. Use await.
+M:System.Runtime.CompilerServices.ValueTaskAwaiter`1.GetResult;Blocking on a Task can deadlock. Use await.
+M:System.Threading.Thread.Sleep(System.Int32);Blocks a thread. Use await Task.Delay (with a TimeProvider if the delay must be testable).
+M:System.Threading.Thread.Sleep(System.TimeSpan);Blocks a thread. Use await Task.Delay (with a TimeProvider if the delay must be testable).

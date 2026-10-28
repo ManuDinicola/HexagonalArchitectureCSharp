@@ -11,6 +11,7 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.ToTable("Orders");
         builder.HasKey(o => o.Id);
         builder.Property(o => o.Id).ValueGeneratedNever();
+        builder.UseConcurrencyToken();
         builder.Property(o => o.CustomerId).HasMaxLength(Order.CustomerIdMaxLength).IsRequired();
         builder.Property(o => o.PlacedAt);
         builder.Ignore(o => o.Total);
