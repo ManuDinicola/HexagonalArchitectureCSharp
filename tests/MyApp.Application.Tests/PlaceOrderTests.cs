@@ -37,8 +37,8 @@ public class PlaceOrderTests : IAsyncLifetime
 
         result.IsFailure.ShouldBeTrue();
         result.Errors.ShouldAllBe(e => e.Type == ErrorType.Validation);
-        result.Errors.ShouldContain(e => e.Code == "CustomerId");
-        result.Errors.ShouldContain(e => e.Code == "Lines[0].Sku");
+        result.Errors.ShouldContain(e => e.Target == "customerId");
+        result.Errors.ShouldContain(e => e.Target == "lines[0].sku");
         A.CallTo(() => _app.Orders.Add(A<Order>._)).MustNotHaveHappened();
         A.CallTo(() => _app.UnitOfWork.SaveChangesAsync(A<CancellationToken>._)).MustNotHaveHappened();
     }
@@ -50,9 +50,49 @@ public class PlaceOrderTests : IAsyncLifetime
 
         var result = await _app.SendAsync(new PlaceOrderCommand("cust-1", [new PlaceOrderLine(tooLong, 1, 1m)]));
 
-        result.Errors.ShouldHaveSingleItem().ShouldBe(OrderErrors.SkuTooLong);
+        result.Errors.ShouldHaveSingleItem().Code.ShouldBe(OrderErrors.SkuTooLong.Code);
         A.CallTo(() => _app.UnitOfWork.SaveChangesAsync(A<CancellationToken>._)).MustNotHaveHappened();
         _app.Saved.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Domain_failures_are_all_reported_not_just_the_first()
+    {
+        var result = await _app.SendAsync(new PlaceOrderCommand("cust-1",
+            [new PlaceOrderLine("A", 0, 1m), new PlaceOrderLine("B", 1, -1m)]));
+
+        result.Errors.Select(e => e.Target).ShouldBe(["lines[0].quantity", "lines[1].unitPrice"], ignoreOrder: true);
+    }
+
+    [Fact]
+    public async Task Order_id_is_a_time_ordered_version_7_guid()
+    {
+        var id = (await _app.SendAsync(ValidCommand())).Unwrap();
+
+        id.ShouldNotBe(Guid.Empty);
+        id.Version.ShouldBe(7);
+    }
+
+    [Fact]
+    public async Task A_failed_save_becomes_the_commands_failed_result()
+    {
+        var conflict = Error.Conflict("Persistence.DuplicateKey", "duplicate");
+        A.CallTo(() => _app.UnitOfWork.SaveChangesAsync(A<CancellationToken>._))
+            .Returns(Task.FromResult<Result>(conflict));
+
+        var result = await _app.SendAsync(ValidCommand());
+
+        result.Errors.ShouldHaveSingleItem().ShouldBe(conflict);
+    }
+
+    [Fact]
+    public async Task Unhandled_exceptions_are_logged_and_rethrown()
+    {
+        A.CallTo(() => _app.Orders.GetByIdReadOnlyAsync(A<Guid>._, A<CancellationToken>._)).Throws<InvalidOperationException>();
+
+        await Should.ThrowAsync<InvalidOperationException>(() => _app.SendAsync(new GetOrderQuery(Guid.NewGuid())));
+
+        _app.Logs.Messages.ShouldContain("Error: GetOrderQuery threw an unhandled exception");
     }
 
     [Fact]
@@ -69,7 +109,7 @@ public class PlaceOrderTests : IAsyncLifetime
         await _app.SendAsync(new PlaceOrderCommand("", []));
 
         _app.Logs.Messages[0].ShouldBe("Information: Handling PlaceOrderCommand");
-        _app.Logs.Messages.ShouldContain(m => m.StartsWith("Warning: PlaceOrderCommand failed") && m.Contains("CustomerId"));
+        _app.Logs.Messages.ShouldContain(m => m.StartsWith("Warning: PlaceOrderCommand failed") && m.Contains("PlaceOrder.CustomerIdRequired"));
     }
 
     [Fact]

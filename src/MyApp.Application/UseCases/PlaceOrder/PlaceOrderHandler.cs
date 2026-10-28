@@ -1,34 +1,26 @@
 using MyApp.Application.Messaging;
 using MyApp.Application.Ports.Out;
-using MyApp.Domain.Common;
 using MyApp.Domain.Aggregates.Orders;
+using MyApp.Domain.Common;
 
 namespace MyApp.Application.UseCases.PlaceOrder;
 
 internal sealed class PlaceOrderHandler(IOrderRepository orders, TimeProvider time)
     : IRequestHandler<PlaceOrderCommand, Result<Guid>>
 {
-    public async Task<Result<Guid>> HandleAsync(PlaceOrderCommand request, CancellationToken cancellationToken)
+    public Task<Result<Guid>> HandleAsync(PlaceOrderCommand request, CancellationToken cancellationToken)
     {
-        var lines = new List<OrderLine>();
-        foreach (var line in request.Lines)
-        {
-            var created = OrderLine.Create(line.Sku, line.Quantity, line.UnitPrice);
-            if (created.IsFailure)
-            {
-                return Result.Failure<Guid>(created.Errors[0]);
-            }
+        var now = time.GetUtcNow();
+        var drafts = request.Lines.Select(l => new OrderLineDraft(l.Sku, l.Quantity, l.UnitPrice)).ToList();
 
-            lines.Add(created.Unwrap());
+        var placed = Order.Place(Guid.CreateVersion7(now), request.CustomerId, drafts, now);
+        if (placed.IsFailure)
+        {
+            return Task.FromResult(Result.Failure<Guid>(placed.Errors));
         }
 
-        var order = Order.Place(request.CustomerId, lines, time.GetUtcNow());
-        if (order.IsFailure)
-        {
-            return Result.Failure<Guid>(order.Errors[0]);
-        }
-
-        orders.Add(order.Unwrap());
-        return order.Unwrap().Id;
+        var order = placed.Unwrap();
+        orders.Add(order);
+        return Task.FromResult<Result<Guid>>(order.Id);
     }
 }

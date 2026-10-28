@@ -16,6 +16,7 @@ public union Result(Succeeded, Failed) : IResult<Result>
 
     public static Result<T> Success<T>(T value) => value;
     public static Result<T> Failure<T>(Error error) => new Failed([error]);
+    public static Result<T> Failure<T>(IReadOnlyList<Error> errors) => new Failed(RequireErrors(errors));
 
     public static implicit operator Result(Error error) => Failure(error);
 

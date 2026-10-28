@@ -12,3 +12,5 @@ M:System.Threading.Tasks.Task.WaitAny;Blocking on a Task can deadlock. Use await
 M:System.Threading.Thread.Sleep;Blocks a thread. Use await Task.Delay (with a TimeProvider if the delay must be testable).
 M:System.Runtime.CompilerServices.ValueTaskAwaiter.GetResult;Blocking on a ValueTask can deadlock. Use await.
 M:System.Runtime.CompilerServices.ValueTaskAwaiter`1.GetResult;Blocking on a ValueTask can deadlock. Use await.
+M:System.Guid.NewGuid;Ids are passed in. In Application use Guid.CreateVersion7(time.GetUtcNow()); the Domain receives ids as parameters.
+M:System.Guid.CreateVersion7();Use Guid.CreateVersion7(time.GetUtcNow()) so ids follow the injected TimeProvider.

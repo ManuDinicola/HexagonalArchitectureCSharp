@@ -14,7 +14,16 @@ internal sealed partial class LoggingBehavior<TRequest, TResponse>(ILogger<Loggi
         var name = typeof(TRequest).Name;
         LogHandling(name);
 
-        var response = await next();
+        TResponse response;
+        try
+        {
+            response = await next();
+        }
+        catch (Exception ex)
+        {
+            LogCrashed(ex, name);
+            throw;
+        }
 
         if (response.IsSuccess)
         {
@@ -33,6 +42,9 @@ internal sealed partial class LoggingBehavior<TRequest, TResponse>(ILogger<Loggi
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Handled {Request}")]
     private partial void LogHandled(string request);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "{Request} threw an unhandled exception")]
+    private partial void LogCrashed(Exception exception, string request);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "{Request} failed: {Errors}")]
     private partial void LogFailed(string request, string errors);

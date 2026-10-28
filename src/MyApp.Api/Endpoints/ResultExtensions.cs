@@ -18,7 +18,7 @@ internal static class ResultExtensions
         if (errors.All(e => e.Type == ErrorType.Validation))
         {
             var byField = errors
-                .GroupBy(e => e.Code, StringComparer.Ordinal)
+                .GroupBy(e => e.Target ?? e.Code, StringComparer.Ordinal)
                 .ToDictionary(g => g.Key, g => g.Select(e => e.Message).ToArray(), StringComparer.Ordinal);
             return Results.ValidationProblem(byField);
         }

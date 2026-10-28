@@ -17,6 +17,7 @@ internal static class Layers
     public static readonly Assembly ApiAssembly = Assembly.Load(Api); // its types are internal
 
     public const string DomainCommon = "MyApp.Domain.Common";
+    public const string InfrastructurePersistence = "MyApp.Infrastructure.Persistence";
     public const string PortsOut = "MyApp.Application.Ports.Out";
     public const string UseCases = "MyApp.Application.UseCases";
     public const string Messaging = "MyApp.Application.Messaging";

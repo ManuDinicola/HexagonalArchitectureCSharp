@@ -3,7 +3,7 @@ using MyApp.Domain.Common;
 
 namespace MyApp.Application.UseCases.PlaceOrder;
 
-/// <summary>Shape only: what is missing, reported per field. Ranges and limits are business rules owned by the Domain.</summary>
+/// <summary>Shape only: what is missing, reported per field (Target). Ranges and limits are business rules owned by the Domain.</summary>
 internal sealed class PlaceOrderValidator : IValidator<PlaceOrderCommand>
 {
     public Task<IReadOnlyList<Error>> ValidateAsync(PlaceOrderCommand request, CancellationToken cancellationToken)
@@ -12,21 +12,20 @@ internal sealed class PlaceOrderValidator : IValidator<PlaceOrderCommand>
 
         if (string.IsNullOrWhiteSpace(request.CustomerId))
         {
-            errors.Add(Error.Validation("CustomerId", "CustomerId is required."));
+            errors.Add(Error.Validation("PlaceOrder.CustomerIdRequired", "CustomerId is required.", "customerId"));
         }
 
         if (request.Lines is not { Count: > 0 })
         {
-            errors.Add(Error.Validation("Lines", "At least one line is required."));
+            errors.Add(Error.Validation("PlaceOrder.LinesRequired", "At least one line is required.", "lines"));
         }
         else
         {
             for (var i = 0; i < request.Lines.Count; i++)
             {
-                var line = request.Lines[i];
-                if (string.IsNullOrWhiteSpace(line.Sku))
+                if (string.IsNullOrWhiteSpace(request.Lines[i].Sku))
                 {
-                    errors.Add(Error.Validation($"Lines[{i}].Sku", "Sku is required."));
+                    errors.Add(Error.Validation("PlaceOrder.SkuRequired", "Sku is required.", $"lines[{i}].sku"));
                 }
             }
         }

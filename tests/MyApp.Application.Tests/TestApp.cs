@@ -20,13 +20,13 @@ public sealed class TestApp : IAsyncDisposable
         // Staged until SaveChangesAsync, like a real unit of work.
         A.CallTo(() => Orders.Add(A<Order>._)).Invokes((Order o) => Staged.Add(o));
         A.CallTo(() => UnitOfWork.SaveChangesAsync(A<CancellationToken>._))
-            .Invokes(() =>
+            .ReturnsLazily(() =>
             {
                 Saved.AddRange(Staged);
                 Staged.Clear();
-            })
-            .Returns(Task.CompletedTask);
-        A.CallTo(() => Orders.GetByIdAsync(A<Guid>._, A<CancellationToken>._))
+                return Task.FromResult(Result.Success());
+            });
+        A.CallTo(() => Orders.GetByIdReadOnlyAsync(A<Guid>._, A<CancellationToken>._))
             .ReturnsLazily((Guid id, CancellationToken _) => Task.FromResult(Saved.FirstOrDefault(o => o.Id == id)));
         A.CallTo(() => Time.GetUtcNow()).Returns(Now);
 

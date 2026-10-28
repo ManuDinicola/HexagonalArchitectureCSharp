@@ -9,7 +9,7 @@ internal sealed class GetOrderHandler(IOrderRepository orders) : IRequestHandler
 {
     public async Task<Result<OrderDto>> HandleAsync(GetOrderQuery request, CancellationToken cancellationToken)
     {
-        var order = await orders.GetByIdAsync(request.OrderId, cancellationToken);
+        var order = await orders.GetByIdReadOnlyAsync(request.OrderId, cancellationToken);
         if (order is null)
         {
             return OrderErrors.NotFound(request.OrderId);

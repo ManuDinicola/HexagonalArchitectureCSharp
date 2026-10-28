@@ -10,4 +10,7 @@ internal sealed class OrderRepository(AppDbContext db) : IOrderRepository
 
     public Task<Order?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         db.Orders.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+
+    public Task<Order?> GetByIdReadOnlyAsync(Guid id, CancellationToken cancellationToken) =>
+        db.Orders.AsNoTracking().FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
 }

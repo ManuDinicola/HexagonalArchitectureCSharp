@@ -48,7 +48,16 @@ public class DependencyRulesTests
 
         Refs(Layers.DomainAssembly).ShouldBeEmpty();
         Refs(Layers.ApplicationAssembly).ShouldBe([Layers.Domain]);
-        Refs(Layers.InfrastructureAssembly).ShouldNotContain(Layers.Api, StringComparer.Ordinal);
+        Refs(Layers.InfrastructureAssembly).ShouldContain(Layers.Application, StringComparer.Ordinal);
+        Refs(Layers.InfrastructureAssembly).ShouldBeSubsetOf([Layers.Application, Layers.Domain]);
+        Refs(Layers.ApiAssembly).ShouldBeSubsetOf([Layers.Application, Layers.Domain, Layers.Infrastructure]);
+    }
+
+    [Fact]
+    public void Api_uses_Infrastructure_only_through_AddInfrastructure()
+    {
+        AssertNoViolations(Types.InAssembly(Layers.ApiAssembly).ShouldNot()
+            .HaveDependencyOn(Layers.InfrastructurePersistence).GetResult());
     }
 
     [Fact]

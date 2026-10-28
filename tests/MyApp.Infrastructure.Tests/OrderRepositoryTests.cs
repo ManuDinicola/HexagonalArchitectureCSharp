@@ -22,28 +22,48 @@ public sealed class OrderRepositoryTests : IDisposable
     private AppDbContext NewContext() =>
         new(new DbContextOptionsBuilder<AppDbContext>().UseSqlite(_connection).Options);
 
+    private static Order NewOrder(DateTimeOffset placedAt) =>
+        Order.Place(Guid.CreateVersion7(placedAt), "cust-1",
+            [new OrderLineDraft("SKU-1", 2, 10.5m), new OrderLineDraft("SKU-2", 1, 3m)], placedAt).Unwrap();
+
     [Fact]
     public async Task Order_round_trips_with_its_lines()
     {
         var placedAt = new DateTimeOffset(2026, 3, 4, 5, 6, 7, TimeSpan.Zero);
-        var order = Order.Place("cust-1",
-            [OrderLine.Create("SKU-1", 2, 10.5m).Unwrap(), OrderLine.Create("SKU-2", 1, 3m).Unwrap()],
-            placedAt).Unwrap();
+        var order = NewOrder(placedAt);
 
         await using (var write = NewContext())
         {
             new OrderRepository(write).Add(order);
-            await new UnitOfWork(write).SaveChangesAsync(CancellationToken.None);
+            (await new UnitOfWork(write).SaveChangesAsync(CancellationToken.None)).IsSuccess.ShouldBeTrue();
         }
 
         await using var read = NewContext(); // fresh context: nothing comes from the change tracker
-        var loaded = await new OrderRepository(read).GetByIdAsync(order.Id, CancellationToken.None);
+        var loaded = await new OrderRepository(read).GetByIdReadOnlyAsync(order.Id, CancellationToken.None);
 
         loaded.ShouldNotBeNull();
         loaded.CustomerId.ShouldBe("cust-1");
         loaded.PlacedAt.ShouldBe(placedAt);
         loaded.Lines.Count.ShouldBe(2);
         loaded.Total.ShouldBe(24m);
+        read.ChangeTracker.Entries().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Saving_the_same_order_twice_is_a_conflict_result_not_an_exception()
+    {
+        var order = NewOrder(DateTimeOffset.UnixEpoch);
+        await using (var first = NewContext())
+        {
+            new OrderRepository(first).Add(order);
+            await new UnitOfWork(first).SaveChangesAsync(CancellationToken.None);
+        }
+
+        await using var second = NewContext();
+        new OrderRepository(second).Add(order);
+        var result = await new UnitOfWork(second).SaveChangesAsync(CancellationToken.None);
+
+        result.Errors.ShouldHaveSingleItem().ShouldBe(PersistenceErrors.DuplicateKey);
     }
 
     [Fact]
@@ -51,7 +71,7 @@ public sealed class OrderRepositoryTests : IDisposable
     {
         await using var db = NewContext();
 
-        (await new OrderRepository(db).GetByIdAsync(Guid.NewGuid(), CancellationToken.None)).ShouldBeNull();
+        (await new OrderRepository(db).GetByIdReadOnlyAsync(Guid.NewGuid(), CancellationToken.None)).ShouldBeNull();
     }
 
     [Fact]
