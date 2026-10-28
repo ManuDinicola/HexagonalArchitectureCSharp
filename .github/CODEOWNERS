@@ -1,0 +1,14 @@
+# Default owners
+*                                   @ManuDinicola
+
+# Guardrails: changing them changes the rules for everybody. Architects review.
+/Directory.Build.props              @ManuDinicola
+/Directory.Packages.props           @ManuDinicola
+/.editorconfig                      @ManuDinicola
+/src/*/BannedSymbols.txt            @ManuDinicola
+/src/Directory.Build.props          @ManuDinicola
+/tests/MyApp.Architecture.Tests/    @ManuDinicola
+/.github/                           @ManuDinicola
+
+# The domain is the heart of the system
+/src/MyApp.Domain/                  @ManuDinicola

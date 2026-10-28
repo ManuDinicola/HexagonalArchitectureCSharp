@@ -1,0 +1,9 @@
+P:System.DateTime.Now;Time goes through IClock (Application/Ports/Out). Pass the time in as a parameter.
+P:System.DateTime.UtcNow;Time goes through IClock (Application/Ports/Out). Pass the time in as a parameter.
+P:System.DateTime.Today;Time goes through IClock (Application/Ports/Out). Pass the time in as a parameter.
+P:System.DateTimeOffset.Now;Time goes through IClock (Application/Ports/Out). Pass the time in as a parameter.
+P:System.DateTimeOffset.UtcNow;Time goes through IClock (Application/Ports/Out). Pass the time in as a parameter.
+P:System.Threading.Tasks.Task`1.Result;Blocking on a Task can deadlock. Use await.
+M:System.Threading.Tasks.Task.Wait;Blocking on a Task can deadlock. Use await.
+M:System.Runtime.CompilerServices.TaskAwaiter.GetResult;Blocking on a Task can deadlock. Use await.
+M:System.Runtime.CompilerServices.TaskAwaiter`1.GetResult;Blocking on a Task can deadlock. Use await.

@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MyApp.Domain\MyApp.Domain.csproj" />
+    <ProjectReference Include="..\..\src\MyApp.Application\MyApp.Application.csproj" />
+    <ProjectReference Include="..\..\src\MyApp.Infrastructure\MyApp.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\MyApp.Api\MyApp.Api.csproj" />
+    <PackageReference Include="NetArchTest.Rules" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,17 @@
+P:System.DateTime.Now;Time goes through IClock (Application/Ports/Out). Pass the time in as a parameter.
+P:System.DateTime.UtcNow;Time goes through IClock (Application/Ports/Out). Pass the time in as a parameter.
+P:System.DateTime.Today;Time goes through IClock (Application/Ports/Out). Pass the time in as a parameter.
+P:System.DateTimeOffset.Now;Time goes through IClock (Application/Ports/Out). Pass the time in as a parameter.
+P:System.DateTimeOffset.UtcNow;Time goes through IClock (Application/Ports/Out). Pass the time in as a parameter.
+P:System.Threading.Tasks.Task`1.Result;Blocking on a Task can deadlock. Use await.
+M:System.Threading.Tasks.Task.Wait;Blocking on a Task can deadlock. Use await.
+M:System.Runtime.CompilerServices.TaskAwaiter.GetResult;Blocking on a Task can deadlock. Use await.
+M:System.Runtime.CompilerServices.TaskAwaiter`1.GetResult;Blocking on a Task can deadlock. Use await.
+
+# Api talks to use cases through IDispatcher only. Add a line for every new port.
+T:MyApp.Application.Ports.Out.IOrderRepository;Api must not use outbound ports. Send a command or query through IDispatcher.
+T:MyApp.Application.Ports.Out.IClock;Api must not use outbound ports. Send a command or query through IDispatcher.
+
+# Never expose domain entities. Map Application DTOs to Api.Contracts. Add a line for every new entity.
+T:MyApp.Domain.Orders.Order;Never expose domain entities from the API. Map Application DTOs to Api.Contracts.
+T:MyApp.Domain.Orders.OrderLine;Never expose domain entities from the API. Map Application DTOs to Api.Contracts.

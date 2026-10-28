@@ -1,0 +1,18 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{csproj,props,targets,slnx,json,yml,yaml}]
+indent_size = 2
+
+[*.cs]
+csharp_style_namespace_declarations = file_scoped:error
+dotnet_style_qualification_for_field = false:suggestion
+
+# Banned API usage (see BannedSymbols.txt in each src project) must break the build.
+dotnet_diagnostic.RS0030.severity = error

@@ -1,0 +1,20 @@
+P:System.DateTime.Now;Time goes through IClock (Application/Ports/Out). Pass the time in as a parameter.
+P:System.DateTime.UtcNow;Time goes through IClock (Application/Ports/Out). Pass the time in as a parameter.
+P:System.DateTime.Today;Time goes through IClock (Application/Ports/Out). Pass the time in as a parameter.
+P:System.DateTimeOffset.Now;Time goes through IClock (Application/Ports/Out). Pass the time in as a parameter.
+P:System.DateTimeOffset.UtcNow;Time goes through IClock (Application/Ports/Out). Pass the time in as a parameter.
+P:System.Threading.Tasks.Task`1.Result;Blocking on a Task can deadlock. Use await.
+M:System.Threading.Tasks.Task.Wait;Blocking on a Task can deadlock. Use await.
+M:System.Runtime.CompilerServices.TaskAwaiter.GetResult;Blocking on a Task can deadlock. Use await.
+M:System.Runtime.CompilerServices.TaskAwaiter`1.GetResult;Blocking on a Task can deadlock. Use await.
+
+# Adapters implement ports; they never call use cases or the mediator. Add a line for every new use case.
+T:MyApp.Application.Messaging.IDispatcher;Adapters never talk to the mediator. Depend on Application.Ports.Out only.
+T:MyApp.Application.Messaging.IRequest`1;Adapters never talk to the mediator. Depend on Application.Ports.Out only.
+T:MyApp.Application.Messaging.IRequestHandler`2;Adapters never talk to the mediator. Depend on Application.Ports.Out only.
+T:MyApp.Application.Messaging.IValidator`1;Adapters never talk to the mediator. Depend on Application.Ports.Out only.
+T:MyApp.Application.Messaging.IPipelineBehavior`2;Adapters never use pipeline behaviors. Depend on Application.Ports.Out only.
+T:MyApp.Application.Behaviors.LoggingBehavior`2;Adapters never use pipeline behaviors.
+T:MyApp.Application.Behaviors.ValidationBehavior`2;Adapters never use pipeline behaviors.
+T:MyApp.Application.UseCases.PlaceOrder.PlaceOrderCommand;Adapters never call use cases. Depend on Application.Ports.Out only.
+T:MyApp.Application.UseCases.GetOrder.GetOrderQuery;Adapters never call use cases. Depend on Application.Ports.Out only.
