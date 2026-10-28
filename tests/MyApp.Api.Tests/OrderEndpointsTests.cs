@@ -40,6 +40,36 @@ public sealed class OrderEndpointsTests : IDisposable
     }
 
     [Fact]
+    public async Task Listing_returns_the_newest_orders_first_and_pages()
+    {
+        using var client = _factory.CreateClient();
+        await client.PostAsJsonAsync(OrdersUri, ValidOrder);
+        var second = await (await client.PostAsJsonAsync(OrdersUri, ValidOrder)).Content.ReadAsStringAsync();
+        using var secondId = JsonDocument.Parse(second);
+
+        var response = await client.GetAsync(new Uri("/orders?page=1&pageSize=1", UriKind.Relative));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        body.RootElement.GetArrayLength().ShouldBe(1);
+        body.RootElement[0].GetProperty("id").GetGuid().ShouldBe(secondId.RootElement.GetProperty("orderId").GetGuid());
+        body.RootElement[0].GetProperty("total").GetDecimal().ShouldBe(9m);
+        body.RootElement[0].GetProperty("lineCount").GetInt32().ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Listing_with_a_bad_page_is_a_400_keyed_by_the_field()
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.GetAsync(new Uri("/orders?page=0", UriKind.Relative));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        problem.RootElement.GetProperty("errors").TryGetProperty("page", out _).ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task Unknown_order_is_a_404_problem()
     {
         using var client = _factory.CreateClient();

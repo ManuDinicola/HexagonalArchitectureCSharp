@@ -12,6 +12,8 @@
 
 /tests/MyApp.Architecture.Tests/    @ManuDinicola
 /.github/                           @ManuDinicola
+/.githooks/                         @ManuDinicola
+/.claude/                           @ManuDinicola
 /AGENTS.md                          @ManuDinicola
 /CLAUDE.md                          @ManuDinicola
 

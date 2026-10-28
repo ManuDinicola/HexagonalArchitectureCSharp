@@ -37,6 +37,14 @@ Commands stage their changes through repositories (`Add`, never `Save`); the pip
 The validator only checks the shape of the request (missing fields) and points each error at its field with `Error.Target`. Limits and ranges (max lengths, quantity > 0, price scale) are business rules and live in the Domain, which reports all of them at once.
 Then add an endpoint in `MyApp.Api/Endpoints`. Read [ARCHITECTURE.md](ARCHITECTURE.md) for where things go.
 
+## Local gate (no CI)
+
+```bash
+git config core.hooksPath .githooks   # once per clone
+```
+
+`.githooks/pre-commit` builds, runs every test, and refuses a commit that stages a guardrail file (`.editorconfig`, `Directory.Build.props`, `BannedSymbols*.txt`, `tests/MyApp.Architecture.Tests`, `AGENTS.md`, ...) unless a human sets `GUARDRAIL_CHANGE=1`. `.claude/settings.json` additionally denies Claude Code edits to those files.
+
 ## What fails the build
 
 Every rule below is enforced by the compiler, an analyzer or a test: run `dotnet build` and `dotnet test` before every commit.

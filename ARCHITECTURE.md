@@ -23,7 +23,7 @@ flowchart LR
 | Project | References | Contains |
 |---|---|---|
 | `MyApp.Domain` | nothing | Entities, business rules and limits, `Result` / `Result<T>` (C# 15 unions), `Error`, domain errors |
-| `MyApp.Application` | Domain | Use cases (command/query + handler + validator), `Ports/Out`, mediator (`Messaging`, `Behaviors`) |
+| `MyApp.Application` | Domain | Use cases (command/query + handler + validator), `Ports/Out`, `ReadModels`, mediator (`Messaging`, `Behaviors`) |
 | `MyApp.Infrastructure` | Application | Adapters: EF Core. All `internal`; only `AddInfrastructure()` is public |
 | `MyApp.Api` | Application, Infrastructure | Endpoints, contracts, ProblemDetails mapping, `Program.cs` wiring |
 
@@ -58,7 +58,8 @@ All five are enforced by the build (see the table in the README). If a rule bloc
 | Read the current time | inject `TimeProvider` and call `GetUtcNow()` (never `DateTime.UtcNow`) |
 | Generate an id | in Application: `Guid.CreateVersion7(time.GetUtcNow())`, then pass it to the Domain (`Guid.NewGuid()` is banned) |
 | Point a validation error at a field | set `Error.Target` to the camelCase input path (`customerId`, `lines[0].sku`); the API uses it as the `ValidationProblem` key, and falls back to `Code` |
-| Read data for a query | `GetByIdReadOnlyAsync` (untracked). Commands use the tracked `GetByIdAsync` |
+| Read one aggregate for a query | `GetByIdReadOnlyAsync` (untracked). Commands use the tracked `GetByIdAsync` |
+| Read a list or any shape that is not an aggregate | a read port in `Ports/Out` returning a flat record from `Application/ReadModels`, implemented with an EF projection (see `IOrderReadStore` and `ListOrders`). Never load aggregates to build a list |
 | Add an aggregate | folder `Domain/Aggregates/<Name>`, a port in `Ports/Out`, an `IEntityTypeConfiguration<T>` that calls `builder.UseConcurrencyToken()`, a repository in Infrastructure. Tests tell you what is missing |
 
 ## Commands, queries and the unit of work
@@ -76,7 +77,8 @@ Every aggregate root carries a shadow `Version` (a time-ordered `Guid`) configur
 
 ### Known limits (deliberate, revisit when they hurt)
 
-- **Reads go through the aggregate.** Queries load the `Order` untracked and map it to a DTO. When a query needs a shape that is not an aggregate (lists, joins, projections), add a read port in `Ports/Out` and implement it with an EF projection instead of loading aggregates.
+- **Single reads go through the aggregate.** `GetOrder` loads the `Order` untracked and maps it to a DTO. Lists and other shapes use a read port with a projection (`ListOrders`); copy that when a query needs joins or filters. Rules the projection recomputes (the order total) are covered by a test against the aggregate.
+- **Paging bounds** live in the use case validator: they protect the service, they are not a business rule.
 - **`EnsureCreated`** stands in for migrations (see README).
 - **Inbound ports.** There is no `Ports/In`: the inbound port is `IDispatcher` plus the command/query types in `UseCases`. Only outbound dependencies need an interface in `Ports/Out`.
 - **Architecture tests are namespace/reference based** (NetArchTest) and `ProjectFileTests` read the `.csproj` files. They can miss exotic dependency shapes; the banned-API analyzer covers *uses* on top of them. Treat them together as the guardrail.

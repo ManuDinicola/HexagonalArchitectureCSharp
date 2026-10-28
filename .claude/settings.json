@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(/.editorconfig)",
+      "Edit(/Directory.Build.props)",
+      "Edit(/Directory.Packages.props)",
+      "Edit(/global.json)",
+      "Edit(/src/Directory.Build.props)",
+      "Edit(/tests/Directory.Build.props)",
+      "Edit(/src/BannedSymbols*.txt)",
+      "Edit(/src/*/BannedSymbols.txt)",
+      "Edit(/tests/MyApp.Architecture.Tests/**)",
+      "Edit(/.githooks/**)",
+      "Edit(/.claude/**)",
+      "Edit(/.github/**)",
+      "Edit(/AGENTS.md)",
+      "Edit(/CLAUDE.md)"
+    ]
+  }
+}

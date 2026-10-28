@@ -1,0 +1,18 @@
+#!/bin/sh
+# Local gate (there is no CI). Enable once per clone: git config core.hooksPath .githooks
+# 1. Refuses staged changes to guardrail files unless a human opts in: GUARDRAIL_CHANGE=1 git commit ...
+# 2. Builds and runs every test.
+set -e
+
+protected='^(\.editorconfig|Directory\.Build\.props|Directory\.Packages\.props|global\.json|src/Directory\.Build\.props|tests/Directory\.Build\.props|src/BannedSymbols[^/]*\.txt|src/[^/]+/BannedSymbols\.txt|tests/MyApp\.Architecture\.Tests/.*|\.githooks/.*|\.claude/.*|\.github/.*|AGENTS\.md|CLAUDE\.md)$'
+
+touched=$(git diff --cached --name-only --diff-filter=ACMRD | grep -E "$protected" || true)
+if [ -n "$touched" ] && [ "${GUARDRAIL_CHANGE:-}" != "1" ]; then
+  echo "Guardrail files are staged:"
+  echo "$touched" | sed 's/^/  /'
+  echo "They change the rules for everybody and need a human decision. If intended: GUARDRAIL_CHANGE=1 git commit ..."
+  exit 1
+fi
+
+dotnet build -nologo -v q
+dotnet test --no-build -nologo -v q

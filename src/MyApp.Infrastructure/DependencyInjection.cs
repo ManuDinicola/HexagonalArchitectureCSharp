@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.TryAddSingleton(TimeProvider.System); // overridable, like in AddApplication()
         services.AddDbContext<AppDbContext>(o => o.UseSqlite(connectionString));
         services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IOrderReadStore, OrderReadStore>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddHostedService<DatabaseInitializer>();
         return services;

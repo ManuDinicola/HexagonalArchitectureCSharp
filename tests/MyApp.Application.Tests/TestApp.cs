@@ -35,6 +35,7 @@ public sealed class TestApp : IAsyncDisposable
         services.AddApplication();
         services.AddSingleton(Orders);
         services.AddSingleton(UnitOfWork);
+        services.AddSingleton(ReadStore);
         services.AddSingleton(Time);
         _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
     }
@@ -44,6 +45,7 @@ public sealed class TestApp : IAsyncDisposable
     public ListLoggerProvider Logs { get; } = new();
     public IOrderRepository Orders { get; } = A.Fake<IOrderRepository>();
     public IUnitOfWork UnitOfWork { get; } = A.Fake<IUnitOfWork>();
+    public IOrderReadStore ReadStore { get; } = A.Fake<IOrderReadStore>();
     public TimeProvider Time { get; } = A.Fake<TimeProvider>();
     public List<Order> Staged { get; } = [];
     public List<Order> Saved { get; } = [];
