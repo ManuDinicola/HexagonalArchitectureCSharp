@@ -59,6 +59,7 @@ All five are enforced by the build (see the table in the README). If a rule bloc
 | Generate an id | in Application: `Guid.CreateVersion7(time.GetUtcNow())`, then pass it to the Domain (`Guid.NewGuid()` is banned) |
 | Point a validation error at a field | set `Error.Target` to the camelCase input path (`customerId`, `lines[0].sku`); the API uses it as the `ValidationProblem` key, and falls back to `Code` |
 | Read data for a query | `GetByIdReadOnlyAsync` (untracked). Commands use the tracked `GetByIdAsync` |
+| Add an aggregate | folder `Domain/Aggregates/<Name>`, a port in `Ports/Out`, an `IEntityTypeConfiguration<T>` that calls `builder.UseConcurrencyToken()`, a repository in Infrastructure. Tests tell you what is missing |
 
 ## Commands, queries and the unit of work
 
@@ -69,13 +70,16 @@ All five are enforced by the build (see the table in the README). If a rule bloc
 - Handlers never call `IUnitOfWork` themselves; an architecture test enforces it.
 - `LoggingBehavior` also logs unhandled exceptions (then rethrows, so the API answers 500).
 
+### Concurrency
+
+Every aggregate root carries a shadow `Version` (a time-ordered `Guid`) configured with `UseConcurrencyToken()`. `AppDbContext` stamps a new value on every save of the root, including when only an owned child changed, so a stale writer fails with `DbUpdateConcurrencyException`, which `UnitOfWork` turns into a `Conflict` result (409). The Domain stays unaware of it. `ConcurrencyTests.Every_aggregate_root_has_a_concurrency_token` fails if you add an aggregate without it.
+
 ### Known limits (deliberate, revisit when they hurt)
 
 - **Reads go through the aggregate.** Queries load the `Order` untracked and map it to a DTO. When a query needs a shape that is not an aggregate (lists, joins, projections), add a read port in `Ports/Out` and implement it with an EF projection instead of loading aggregates.
-- **No concurrency token yet.** `Order` is immutable after placement, so there is nothing to race on. When you add behavior that changes an aggregate, add a concurrency token to its EF mapping: `UnitOfWork` already maps `DbUpdateConcurrencyException` to a `Conflict`.
 - **`EnsureCreated`** stands in for migrations (see README).
 - **Inbound ports.** There is no `Ports/In`: the inbound port is `IDispatcher` plus the command/query types in `UseCases`. Only outbound dependencies need an interface in `Ports/Out`.
-- **Architecture tests are namespace/reference based** (NetArchTest). They can miss exotic dependency shapes; the banned-API analyzer covers *uses* on top of them. Treat the two together as the guardrail.
+- **Architecture tests are namespace/reference based** (NetArchTest) and `ProjectFileTests` read the `.csproj` files. They can miss exotic dependency shapes; the banned-API analyzer covers *uses* on top of them. Treat them together as the guardrail.
 
 ## Nothing to maintain for the guardrails
 

@@ -19,6 +19,20 @@ public class DesignRulesTests
     }
 
     [Fact]
+    public void Api_exposes_nothing()
+    {
+        Layers.ApiAssembly.GetExportedTypes().ShouldBeEmpty("The Api is a composition root: endpoints and contracts are internal.");
+    }
+
+    [Fact]
+    public void Pipeline_internals_are_not_public()
+    {
+        AssertNoViolations(Types.InAssembly(Layers.ApplicationAssembly)
+            .That().ResideInNamespace(Layers.Behaviors).Or().HaveName("Dispatcher")
+            .Should().NotBePublic().GetResult());
+    }
+
+    [Fact]
     public void Persistence_types_are_not_public()
     {
         AssertNoViolations(Types.InAssembly(Layers.InfrastructureAssembly)
@@ -38,6 +52,45 @@ public class DesignRulesTests
         AssertNoViolations(ports.ShouldNot()
             .HaveDependencyOnAny(Layers.UseCases, Layers.Messaging, Layers.Behaviors,
                 "Microsoft.EntityFrameworkCore", "Microsoft.AspNetCore", "Microsoft.Extensions").GetResult());
+    }
+
+    [Fact]
+    public void Port_methods_that_return_a_Task_take_a_CancellationToken()
+    {
+        var ports = Layers.ApplicationAssembly.GetTypes()
+            .Where(t => t.IsInterface && string.Equals(t.Namespace, Layers.PortsOut, StringComparison.Ordinal));
+
+        foreach (var method in ports.SelectMany(p => p.GetMethods()).Where(m => typeof(Task).IsAssignableFrom(m.ReturnType)))
+        {
+            method.GetParameters().LastOrDefault()?.ParameterType.ShouldBe(typeof(CancellationToken),
+                $"{method.DeclaringType!.Name}.{method.Name} must end with a CancellationToken.");
+        }
+    }
+
+    [Fact]
+    public void Commands_implement_ICommand_and_queries_do_not()
+    {
+        var requests = Layers.ApplicationAssembly.GetTypes()
+            .Where(t => t is { IsClass: true, IsAbstract: false } && ImplementsOpen(t, typeof(IRequest<>)))
+            .ToList();
+
+        requests.ShouldNotBeEmpty();
+        foreach (var request in requests)
+        {
+            var isCommand = ImplementsOpen(request, typeof(ICommand<>));
+            if (request.Name.EndsWith("Command", StringComparison.Ordinal))
+            {
+                isCommand.ShouldBeTrue($"{request.Name} changes state: implement ICommand<...> so the unit of work saves it.");
+            }
+            else if (request.Name.EndsWith("Query", StringComparison.Ordinal))
+            {
+                isCommand.ShouldBeFalse($"{request.Name} is a query: implement IRequest<...>, queries never save.");
+            }
+            else
+            {
+                throw new ShouldAssertException($"{request.Name}: name requests *Command (state change) or *Query (read).");
+            }
+        }
     }
 
     [Fact]

@@ -12,6 +12,8 @@
 
 /tests/MyApp.Architecture.Tests/    @ManuDinicola
 /.github/                           @ManuDinicola
+/AGENTS.md                          @ManuDinicola
+/CLAUDE.md                          @ManuDinicola
 
 # The domain is the heart of the system
 /src/MyApp.Domain/                  @ManuDinicola

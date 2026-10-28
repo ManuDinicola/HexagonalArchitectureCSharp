@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # global.json pins the SDK (a .NET 11 release candidate, hence the prerelease quality).
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+          dotnet-quality: preview
+
+      # Warnings are errors and the banned-API rules are errors: a rule broken here fails the build.
+      - run: dotnet build --configuration Release
+
+      # Architecture, domain, application, infrastructure and end-to-end API tests.
+      - run: dotnet test --configuration Release --no-build

@@ -32,6 +32,18 @@ public partial class SourceLayoutTests
         violations.ShouldBeEmpty("Name the file after its type: " + string.Join(", ", violations));
     }
 
+    [Fact]
+    public void Production_code_never_suppresses_a_warning()
+    {
+        string[] forbidden = ["#pragma warning disable", "SuppressMessage", "[assembly: SuppressMessage", "<NoWarn>"];
+        var violations = Repo.SourceFiles("*.cs").Concat(Repo.SourceFiles("*.csproj"))
+            .Where(f => forbidden.Any(token => File.ReadAllText(f).Contains(token, StringComparison.Ordinal)))
+            .Select(f => Path.GetRelativePath(Repo.Src, f))
+            .ToList();
+
+        violations.ShouldBeEmpty("Fix the code instead of silencing the rule: " + string.Join(", ", violations));
+    }
+
     // Result<T> may live in ResultOfT.cs: a generic type may carry an "Of..." suffix.
     private static bool NamesFile(string type, string file) =>
         string.Equals(type, file, StringComparison.Ordinal)
