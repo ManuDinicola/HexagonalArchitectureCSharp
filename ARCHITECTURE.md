@@ -55,10 +55,7 @@ All five are enforced by the build (see the table in the README). If a rule bloc
 | Cross-cutting concern around every use case | an `IPipelineBehavior` in `Application/Behaviors`, registered in `AddApplication()` (order = execution order) |
 | Read the current time | inject `TimeProvider` and call `GetUtcNow()` (never `DateTime.UtcNow`) |
 
-## When you add a new port, entity or use case
+## Nothing to maintain for the guardrails
 
-The architecture tests cover new types automatically. The Roslyn banned-API lists name types one by one (rules for every project live once in `src/BannedSymbols.Common.txt`; Api and Infrastructure have their own `BannedSymbols.txt`), so add a line:
-
-- new port in `Ports/Out` -> `src/MyApp.Api/BannedSymbols.txt`
-- new entity -> `src/MyApp.Api/BannedSymbols.txt`
-- new command/query -> `src/MyApp.Infrastructure/BannedSymbols.txt`
+The banned-API rules ban whole namespaces (`Application.Ports.Out`, `Domain.Aggregates`, `Application.UseCases`, ...), and the architecture tests work on namespaces too. A new port, aggregate or use case is covered the moment you create it, as long as it lives in the right folder:
+ports in `Application/Ports/Out`, entities in `Domain/Aggregates/<Name>`, use cases in `Application/UseCases/<Name>`.

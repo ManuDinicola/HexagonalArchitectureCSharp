@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using MyApp.Domain.Orders;
+using MyApp.Domain.Aggregates.Orders;
 
 namespace MyApp.Infrastructure.Persistence;
 

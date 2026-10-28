@@ -5,7 +5,7 @@ using MyApp.Application.Messaging;
 using MyApp.Application.Ports.Out;
 using MyApp.Application.Tests.Fakes;
 using MyApp.Domain.Common;
-using MyApp.Domain.Orders;
+using MyApp.Domain.Aggregates.Orders;
 
 namespace MyApp.Application.Tests;
 

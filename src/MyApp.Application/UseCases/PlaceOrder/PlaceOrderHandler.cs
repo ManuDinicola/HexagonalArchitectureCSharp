@@ -1,7 +1,7 @@
 using MyApp.Application.Messaging;
 using MyApp.Application.Ports.Out;
 using MyApp.Domain.Common;
-using MyApp.Domain.Orders;
+using MyApp.Domain.Aggregates.Orders;
 
 namespace MyApp.Application.UseCases.PlaceOrder;
 

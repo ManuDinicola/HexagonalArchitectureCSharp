@@ -1,10 +1,4 @@
-# Adapters implement ports; they never call use cases or the mediator. Add a line for every new use case.
-T:MyApp.Application.Messaging.IDispatcher;Adapters never talk to the mediator. Depend on Application.Ports.Out only.
-T:MyApp.Application.Messaging.IRequest`1;Adapters never talk to the mediator. Depend on Application.Ports.Out only.
-T:MyApp.Application.Messaging.IRequestHandler`2;Adapters never talk to the mediator. Depend on Application.Ports.Out only.
-T:MyApp.Application.Messaging.IValidator`1;Adapters never talk to the mediator. Depend on Application.Ports.Out only.
-T:MyApp.Application.Messaging.IPipelineBehavior`2;Adapters never use pipeline behaviors. Depend on Application.Ports.Out only.
-T:MyApp.Application.Behaviors.LoggingBehavior`2;Adapters never use pipeline behaviors.
-T:MyApp.Application.Behaviors.ValidationBehavior`2;Adapters never use pipeline behaviors.
-T:MyApp.Application.UseCases.PlaceOrder.PlaceOrderCommand;Adapters never call use cases. Depend on Application.Ports.Out only.
-T:MyApp.Application.UseCases.GetOrder.GetOrderQuery;Adapters never call use cases. Depend on Application.Ports.Out only.
+# Namespace bans cover every type inside, including types added later: nothing to maintain.
+N:MyApp.Application.UseCases;Adapters implement ports, they never call use cases. Depend on Application.Ports.Out only.
+N:MyApp.Application.Messaging;Adapters never talk to the mediator. Depend on Application.Ports.Out only.
+N:MyApp.Application.Behaviors;Adapters never use pipeline behaviors. Depend on Application.Ports.Out only.

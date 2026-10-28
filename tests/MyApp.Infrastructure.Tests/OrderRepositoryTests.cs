@@ -2,7 +2,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MyApp.Application.Ports.Out;
-using MyApp.Domain.Orders;
+using MyApp.Domain.Aggregates.Orders;
 using MyApp.Infrastructure.Persistence;
 
 namespace MyApp.Infrastructure.Tests;

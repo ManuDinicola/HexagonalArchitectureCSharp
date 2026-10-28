@@ -51,8 +51,8 @@ Then add an endpoint in `MyApp.Api/Endpoints`. Read [ARCHITECTURE.md](ARCHITECTU
 | Warnings (nullable, unused, ...) | `TreatWarningsAsErrors` |
 
 Note on the two layers: the Roslyn banned-API analyzer flags *uses* (calls, `new`, `typeof`) with a precise
-message while you type. It does not flag bare declarations such as a constructor parameter, and `BannedSymbols.txt`
-lists types one by one. The NetArchTest rules cover those gaps, generically, for every type, including ones added later.
+message while you type. It does not flag bare declarations such as a constructor parameter. The NetArchTest rules cover
+that gap. Both work on namespaces, so new ports, entities and use cases are covered automatically.
 
 ## Design decisions
 

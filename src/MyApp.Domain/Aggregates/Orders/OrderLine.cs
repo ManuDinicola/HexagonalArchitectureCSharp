@@ -1,6 +1,6 @@
 using MyApp.Domain.Common;
 
-namespace MyApp.Domain.Orders;
+namespace MyApp.Domain.Aggregates.Orders;
 
 public sealed class OrderLine
 {

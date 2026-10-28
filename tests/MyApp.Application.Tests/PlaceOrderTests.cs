@@ -2,7 +2,7 @@ using FakeItEasy;
 using MyApp.Application.UseCases.GetOrder;
 using MyApp.Application.UseCases.PlaceOrder;
 using MyApp.Domain.Common;
-using MyApp.Domain.Orders;
+using MyApp.Domain.Aggregates.Orders;
 
 namespace MyApp.Application.Tests;
 

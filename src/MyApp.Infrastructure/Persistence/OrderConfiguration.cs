@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using MyApp.Domain.Orders;
+using MyApp.Domain.Aggregates.Orders;
 
 namespace MyApp.Infrastructure.Persistence;
 

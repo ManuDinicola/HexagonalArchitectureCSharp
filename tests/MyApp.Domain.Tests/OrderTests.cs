@@ -1,4 +1,4 @@
-using MyApp.Domain.Orders;
+using MyApp.Domain.Aggregates.Orders;
 
 namespace MyApp.Domain.Tests;
 

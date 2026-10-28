@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MyApp.Application.Ports.Out;
-using MyApp.Domain.Orders;
+using MyApp.Domain.Aggregates.Orders;
 
 namespace MyApp.Infrastructure.Persistence;
 
