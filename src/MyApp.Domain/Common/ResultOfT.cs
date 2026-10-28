@@ -1,18 +1,18 @@
 namespace MyApp.Domain.Common;
 
-public sealed class Result<T> : Result, IResult<Result<T>>
+/// <summary>A value of type <typeparamref name="T"/>, or <see cref="Failed"/>. Pattern match it, or use <see cref="Unwrap"/>.</summary>
+public union Result<T>(T, Failed) : IResult<Result<T>>
 {
-    private readonly T? _value;
+    public bool IsSuccess => Value is T;
+    public bool IsFailure => !IsSuccess;
+    public IReadOnlyList<Error> Errors => Value is Failed failed ? failed.Errors : [];
 
-    internal Result(T? value, IReadOnlyList<Error> errors) : base(errors) => _value = value;
+    /// <summary>Reading the value of a failed result is a bug, so it throws. Check <see cref="IsSuccess"/> first.</summary>
+    public T Unwrap() => Value is T value
+        ? value
+        : throw new InvalidOperationException("Cannot unwrap a failed result. Check IsSuccess first.");
 
-    /// <summary>Reading the value of a failed result is a bug, so it throws.</summary>
-    public T Value => IsSuccess
-        ? _value!
-        : throw new InvalidOperationException("Cannot read Value of a failed result. Check IsSuccess first.");
+    public static implicit operator Result<T>(Error error) => new Failed([error]);
 
-    public static implicit operator Result<T>(T value) => Success(value);
-    public static implicit operator Result<T>(Error error) => Failure<T>(error);
-
-    static Result<T> IResult<Result<T>>.FromErrors(IReadOnlyList<Error> errors) => new(default, RequireErrors(errors));
+    static Result<T> IResult<Result<T>>.FromErrors(IReadOnlyList<Error> errors) => new Failed(Result.RequireErrors(errors));
 }

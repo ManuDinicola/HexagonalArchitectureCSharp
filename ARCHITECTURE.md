@@ -22,7 +22,7 @@ flowchart LR
 
 | Project | References | Contains |
 |---|---|---|
-| `MyApp.Domain` | nothing | Entities, `Result`, `Error`, domain errors |
+| `MyApp.Domain` | nothing | Entities, `Result` / `Result<T>` (C# 15 unions), `Error`, domain errors |
 | `MyApp.Application` | Domain | Use cases (command/query + handler + validator), `Ports/Out`, mediator (`Messaging`, `Behaviors`) |
 | `MyApp.Infrastructure` | Application | Adapters: EF Core, clock. All `internal`; only `AddInfrastructure()` is public |
 | `MyApp.Api` | Application, Infrastructure | Endpoints, contracts, ProblemDetails mapping, `Program.cs` wiring |

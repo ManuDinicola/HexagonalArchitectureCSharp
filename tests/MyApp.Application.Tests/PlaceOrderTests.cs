@@ -24,7 +24,7 @@ public class PlaceOrderTests : IAsyncLifetime
         result.IsSuccess.ShouldBeTrue();
         A.CallTo(() => _app.Orders.AddAsync(A<Order>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
         var order = _app.Saved.ShouldHaveSingleItem();
-        order.Id.ShouldBe(result.Value);
+        order.Id.ShouldBe(result.Unwrap());
         order.PlacedAt.ShouldBe(TestApp.Now);
         order.Total.ShouldBe(25m);
     }
@@ -53,14 +53,14 @@ public class PlaceOrderTests : IAsyncLifetime
     [Fact]
     public async Task Placed_order_can_be_queried_and_comes_back_as_a_dto()
     {
-        var id = (await _app.SendAsync(ValidCommand())).Value;
+        var id = (await _app.SendAsync(ValidCommand())).Unwrap();
 
         var result = await _app.SendAsync(new GetOrderQuery(id));
 
         result.IsSuccess.ShouldBeTrue();
-        result.Value.CustomerId.ShouldBe("cust-1");
-        result.Value.Lines.Count.ShouldBe(2);
-        result.Value.Total.ShouldBe(25m);
+        result.Unwrap().CustomerId.ShouldBe("cust-1");
+        result.Unwrap().Lines.Count.ShouldBe(2);
+        result.Unwrap().Total.ShouldBe(25m);
     }
 
     [Fact]

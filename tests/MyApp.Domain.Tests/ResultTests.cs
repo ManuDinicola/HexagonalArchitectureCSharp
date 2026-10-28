@@ -12,7 +12,7 @@ public class ResultTests
         Result<int> result = 42;
 
         result.IsSuccess.ShouldBeTrue();
-        result.Value.ShouldBe(42);
+        result.Unwrap().ShouldBe(42);
         result.Errors.ShouldBeEmpty();
     }
 
@@ -23,7 +23,7 @@ public class ResultTests
 
         result.IsFailure.ShouldBeTrue();
         result.Errors.ShouldHaveSingleItem().ShouldBe(Boom);
-        Should.Throw<InvalidOperationException>(() => result.Value);
+        Should.Throw<InvalidOperationException>(() => result.Unwrap());
     }
 
     [Fact]

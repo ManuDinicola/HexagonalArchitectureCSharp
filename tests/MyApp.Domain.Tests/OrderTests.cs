@@ -8,7 +8,7 @@ public class OrderTests
     private static readonly DateTimeOffset Now = new(2026, 1, 2, 3, 4, 5, TimeSpan.Zero);
 
     private static OrderLine Line(string sku = "SKU-1", int qty = 2, decimal price = 5m) =>
-        OrderLine.Create(sku, qty, price).Value;
+        OrderLine.Create(sku, qty, price).Unwrap();
 
     [Fact]
     public void Place_with_valid_data_succeeds_and_computes_total()
@@ -16,10 +16,10 @@ public class OrderTests
         var result = Order.Place("  cust-1 ", [Line(qty: 2, price: 5m), Line("SKU-2", 1, 3m)], Now);
 
         result.IsSuccess.ShouldBeTrue();
-        result.Value.CustomerId.ShouldBe("cust-1");
-        result.Value.PlacedAt.ShouldBe(Now);
-        result.Value.Id.ShouldNotBe(Guid.Empty);
-        result.Value.Total.ShouldBe(13m);
+        result.Unwrap().CustomerId.ShouldBe("cust-1");
+        result.Unwrap().PlacedAt.ShouldBe(Now);
+        result.Unwrap().Id.ShouldNotBe(Guid.Empty);
+        result.Unwrap().Total.ShouldBe(13m);
     }
 
     [Theory]
@@ -56,7 +56,7 @@ public class OrderTests
     [Fact]
     public void Lines_cannot_be_modified_from_outside()
     {
-        var order = Order.Place("cust-1", [Line()], Now).Value;
+        var order = Order.Place("cust-1", [Line()], Now).Unwrap();
 
         (order.Lines is ICollection<OrderLine> { IsReadOnly: false }).ShouldBeFalse();
     }

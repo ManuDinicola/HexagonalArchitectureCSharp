@@ -20,7 +20,7 @@ internal static class OrderEndpoints
             var result = await dispatcher.SendAsync(command, ct);
 
             return result.IsSuccess
-                ? Results.Created($"/orders/{result.Value}", new PlaceOrderResponse(result.Value))
+                ? Results.Created($"/orders/{result.Unwrap()}", new PlaceOrderResponse(result.Unwrap()))
                 : result.ToProblem();
         });
 
@@ -28,7 +28,7 @@ internal static class OrderEndpoints
         {
             var result = await dispatcher.SendAsync(new GetOrderQuery(id), ct);
 
-            return result.IsSuccess ? Results.Ok(ToResponse(result.Value)) : result.ToProblem();
+            return result.IsSuccess ? Results.Ok(ToResponse(result.Unwrap())) : result.ToProblem();
         });
     }
 

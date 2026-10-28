@@ -27,8 +27,8 @@ public sealed class OrderRepositoryTests : IDisposable
     {
         var placedAt = new DateTimeOffset(2026, 3, 4, 5, 6, 7, TimeSpan.Zero);
         var order = Order.Place("cust-1",
-            [OrderLine.Create("SKU-1", 2, 10.5m).Value, OrderLine.Create("SKU-2", 1, 3m).Value],
-            placedAt).Value;
+            [OrderLine.Create("SKU-1", 2, 10.5m).Unwrap(), OrderLine.Create("SKU-2", 1, 3m).Unwrap()],
+            placedAt).Unwrap();
 
         await using (var write = NewContext())
             await new OrderRepository(write).AddAsync(order, CancellationToken.None);
