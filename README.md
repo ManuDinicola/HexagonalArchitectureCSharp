@@ -37,8 +37,8 @@ Then add an endpoint in `MyApp.Api/Endpoints`. Read [ARCHITECTURE.md](ARCHITECTU
 
 | Mistake | Caught by |
 |---|---|
-| `DateTime.Now/UtcNow`, `DateTimeOffset.Now/UtcNow` | `BannedSymbols.txt` (RS0030), use an injected `TimeProvider` |
-| `Task.Result`, `Task.Wait()`, `GetAwaiter().GetResult()` | `BannedSymbols.txt` (RS0030), use `await` |
+| `DateTime.Now/UtcNow`, `DateTimeOffset.Now/UtcNow` | `src/BannedSymbols.Common.txt` (RS0030), use an injected `TimeProvider` |
+| `Task.Result`, `Task.Wait()`, `GetAwaiter().GetResult()` | `src/BannedSymbols.Common.txt` (RS0030), use `await` |
 | Api calls an outbound port or an entity | RS0030 on usage + architecture tests on any reference |
 | Infrastructure calls use cases / mediator / behaviors | RS0030 on usage + architecture tests on any reference |
 | Domain/Application referencing EF Core or ASP.NET | architecture tests |

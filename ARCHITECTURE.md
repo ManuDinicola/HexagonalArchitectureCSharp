@@ -57,7 +57,7 @@ All five are enforced by the build (see the table in the README). If a rule bloc
 
 ## When you add a new port, entity or use case
 
-The architecture tests cover new types automatically. The Roslyn `BannedSymbols.txt` lists types one by one, so add a line:
+The architecture tests cover new types automatically. The Roslyn banned-API lists name types one by one (rules for every project live once in `src/BannedSymbols.Common.txt`; Api and Infrastructure have their own `BannedSymbols.txt`), so add a line:
 
 - new port in `Ports/Out` -> `src/MyApp.Api/BannedSymbols.txt`
 - new entity -> `src/MyApp.Api/BannedSymbols.txt`

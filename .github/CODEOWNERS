@@ -5,6 +5,7 @@
 /Directory.Build.props              @ManuDinicola
 /Directory.Packages.props           @ManuDinicola
 /.editorconfig                      @ManuDinicola
+/src/BannedSymbols*.txt              @ManuDinicola
 /src/*/BannedSymbols.txt            @ManuDinicola
 /src/Directory.Build.props          @ManuDinicola
 /tests/MyApp.Architecture.Tests/    @ManuDinicola

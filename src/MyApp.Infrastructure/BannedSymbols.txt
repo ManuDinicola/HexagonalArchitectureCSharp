@@ -1,13 +1,3 @@
-P:System.DateTime.Now;Use an injected TimeProvider (time.GetUtcNow()). In the Domain, pass the time in as a parameter.
-P:System.DateTime.UtcNow;Use an injected TimeProvider (time.GetUtcNow()). In the Domain, pass the time in as a parameter.
-P:System.DateTime.Today;Use an injected TimeProvider (time.GetUtcNow()). In the Domain, pass the time in as a parameter.
-P:System.DateTimeOffset.Now;Use an injected TimeProvider (time.GetUtcNow()). In the Domain, pass the time in as a parameter.
-P:System.DateTimeOffset.UtcNow;Use an injected TimeProvider (time.GetUtcNow()). In the Domain, pass the time in as a parameter.
-P:System.Threading.Tasks.Task`1.Result;Blocking on a Task can deadlock. Use await.
-M:System.Threading.Tasks.Task.Wait;Blocking on a Task can deadlock. Use await.
-M:System.Runtime.CompilerServices.TaskAwaiter.GetResult;Blocking on a Task can deadlock. Use await.
-M:System.Runtime.CompilerServices.TaskAwaiter`1.GetResult;Blocking on a Task can deadlock. Use await.
-
 # Adapters implement ports; they never call use cases or the mediator. Add a line for every new use case.
 T:MyApp.Application.Messaging.IDispatcher;Adapters never talk to the mediator. Depend on Application.Ports.Out only.
 T:MyApp.Application.Messaging.IRequest`1;Adapters never talk to the mediator. Depend on Application.Ports.Out only.
