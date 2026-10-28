@@ -24,12 +24,7 @@ curl localhost:5000/orders/<id>
 
 ## Add a use case
 
-```bash
-dotnet new install ./templates/hexa-usecase        # once
-dotnet new hexa-usecase -n CancelOrder -o src/MyApp.Application/UseCases/CancelOrder
-```
-
-This generates `CancelOrderCommand`, `CancelOrderHandler` and `CancelOrderValidator`.
+Copy the `UseCases/PlaceOrder` folder and rename it: a command (or query), an `internal` handler and an `internal` validator.
 Handlers and validators are found by assembly scanning: there is nothing to register.
 Then add an endpoint in `MyApp.Api/Endpoints`. Read [ARCHITECTURE.md](ARCHITECTURE.md) for where things go.
 

@@ -45,7 +45,7 @@ All five are enforced by the build (see the table in the README). If a rule bloc
 |---|---|
 | Add a business rule or invariant | `Domain/<Aggregate>`: entity factory or method, plus a Domain test |
 | Add an error returned to callers | `Domain/<Aggregate>/<Aggregate>Errors.cs` |
-| Add a use case | `dotnet new hexa-usecase -n Name -o src/MyApp.Application/UseCases/Name` |
+| Add a use case | copy `Application/UseCases/PlaceOrder` (command + handler + validator) |
 | Check request shape (required, ranges) | the use case's `Validator` |
 | Need something from the outside (DB, clock, HTTP service) | an interface in `Application/Ports/Out`, domain types only |
 | Implement that interface | `Infrastructure/...` as an `internal` class, registered in `AddInfrastructure()` |
