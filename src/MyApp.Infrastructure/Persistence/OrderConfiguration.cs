@@ -11,7 +11,7 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.ToTable("Orders");
         builder.HasKey(o => o.Id);
         builder.Property(o => o.Id).ValueGeneratedNever();
-        builder.Property(o => o.CustomerId).HasMaxLength(100).IsRequired();
+        builder.Property(o => o.CustomerId).HasMaxLength(Order.CustomerIdMaxLength).IsRequired();
         builder.Property(o => o.PlacedAt);
         builder.Ignore(o => o.Total);
 
@@ -21,9 +21,9 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
             lines.WithOwner().HasForeignKey("OrderId");
             lines.Property<int>("Id");
             lines.HasKey("Id");
-            lines.Property(l => l.Sku).HasMaxLength(50).IsRequired();
+            lines.Property(l => l.Sku).HasMaxLength(OrderLine.SkuMaxLength).IsRequired();
             lines.Property(l => l.Quantity);
-            lines.Property(l => l.UnitPrice).HasPrecision(18, 2);
+            lines.Property(l => l.UnitPrice).HasPrecision(18, OrderLine.UnitPriceScale);
             lines.Ignore(l => l.Total);
         });
         builder.Navigation(o => o.Lines).UsePropertyAccessMode(PropertyAccessMode.Field);

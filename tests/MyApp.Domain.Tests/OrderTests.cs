@@ -33,6 +33,14 @@ public class OrderTests
     }
 
     [Fact]
+    public void Place_with_too_long_customer_fails()
+    {
+        var result = Order.Place(new string('c', Order.CustomerIdMaxLength + 1), [Line()], Now);
+
+        result.Errors.ShouldHaveSingleItem().ShouldBe(OrderErrors.CustomerTooLong);
+    }
+
+    [Fact]
     public void Place_without_lines_fails()
     {
         var result = Order.Place("cust-1", [], Now);
@@ -45,11 +53,20 @@ public class OrderTests
     [InlineData("A", 0, 1, "OrderLine.InvalidQuantity")]
     [InlineData("A", -1, 1, "OrderLine.InvalidQuantity")]
     [InlineData("A", 1, -0.01, "OrderLine.InvalidUnitPrice")]
+    [InlineData("A", 1, 1.005, "OrderLine.UnitPriceTooPrecise")]
     public void OrderLine_enforces_invariants(string sku, int quantity, double price, string expectedCode)
     {
         var result = OrderLine.Create(sku, quantity, (decimal)price);
 
         result.Errors.ShouldHaveSingleItem().Code.ShouldBe(expectedCode);
+    }
+
+    [Fact]
+    public void OrderLine_with_too_long_sku_fails()
+    {
+        var result = OrderLine.Create(new string('s', OrderLine.SkuMaxLength + 1), 1, 1m);
+
+        result.Errors.ShouldHaveSingleItem().ShouldBe(OrderErrors.SkuTooLong);
     }
 
     [Fact]

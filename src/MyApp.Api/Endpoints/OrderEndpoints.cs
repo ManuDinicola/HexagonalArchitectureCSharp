@@ -15,7 +15,7 @@ internal static class OrderEndpoints
         {
             var command = new PlaceOrderCommand(
                 body.CustomerId,
-                [.. body.Lines.Select(l => new PlaceOrderLine(l.Sku, l.Quantity, l.UnitPrice))]);
+                [.. (body.Lines ?? []).Select(l => new PlaceOrderLine(l.Sku, l.Quantity, l.UnitPrice))]);
 
             var result = await dispatcher.SendAsync(command, ct);
 

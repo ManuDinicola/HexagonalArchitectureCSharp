@@ -12,7 +12,6 @@ public static class DependencyInjection
     {
         services.AddDbContext<AppDbContext>(o => o.UseSqlite(connectionString));
         services.AddScoped<IOrderRepository, OrderRepository>();
-        services.AddSingleton(TimeProvider.System);
         services.AddHostedService<DatabaseInitializer>();
         return services;
     }

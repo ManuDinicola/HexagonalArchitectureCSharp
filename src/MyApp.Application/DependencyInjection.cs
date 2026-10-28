@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using MyApp.Application.Behaviors;
 using MyApp.Application.Messaging;
 
@@ -8,6 +9,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
+        services.TryAddSingleton(TimeProvider.System); // overridable: register your own TimeProvider first
         services.AddScoped<IDispatcher, Dispatcher>();
 
         // Order matters: first registered = outermost. Logging sees validation failures.

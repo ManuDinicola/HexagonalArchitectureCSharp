@@ -9,6 +9,12 @@ internal static class ResultExtensions
     {
         var errors = result.Errors;
 
+        if (errors.Count == 0)
+        {
+            // A failed result without errors (e.g. default(Result)) is a bug, not a client error.
+            return Results.Problem(statusCode: StatusCodes.Status500InternalServerError, title: "Result.NoErrors");
+        }
+
         if (errors.All(e => e.Type == ErrorType.Validation))
         {
             var byField = errors
@@ -17,7 +23,8 @@ internal static class ResultExtensions
             return Results.ValidationProblem(byField);
         }
 
-        var first = errors[0];
+        // Mixed errors: a non-validation error is the more important one to report.
+        var first = errors.First(e => e.Type != ErrorType.Validation);
         var status = first.Type switch
         {
             ErrorType.NotFound => StatusCodes.Status404NotFound,

@@ -10,6 +10,15 @@ public static class OrderErrors
     public static Error NoLines { get; } =
         Error.Validation("Order.NoLines", "An order needs at least one line.");
 
+    public static Error CustomerTooLong { get; } =
+        Error.Validation("Order.CustomerTooLong", $"CustomerId cannot exceed {Order.CustomerIdMaxLength} characters.");
+
+    public static Error SkuTooLong { get; } =
+        Error.Validation("OrderLine.SkuTooLong", $"Sku cannot exceed {OrderLine.SkuMaxLength} characters.");
+
+    public static Error UnitPriceTooPrecise { get; } =
+        Error.Validation("OrderLine.UnitPriceTooPrecise", $"Unit price cannot have more than {OrderLine.UnitPriceScale} decimal places.");
+
     public static Error SkuRequired { get; } =
         Error.Validation("OrderLine.SkuRequired", "An order line needs a SKU.");
 

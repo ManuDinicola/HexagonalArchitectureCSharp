@@ -57,11 +57,16 @@ public sealed class OrderRepositoryTests : IDisposable
     public async Task AddInfrastructure_wires_every_port()
     {
         var services = new ServiceCollection().AddInfrastructure("DataSource=:memory:");
-        await using var provider = services.BuildServiceProvider();
+        await using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
         await using var scope = provider.CreateAsyncScope();
 
-        scope.ServiceProvider.GetRequiredService<IOrderRepository>().ShouldNotBeNull();
-        scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow().ShouldBeGreaterThan(DateTimeOffset.UnixEpoch);
+        var ports = typeof(IOrderRepository).Assembly.GetTypes()
+            .Where(t => t.IsInterface && string.Equals(t.Namespace, typeof(IOrderRepository).Namespace, StringComparison.Ordinal));
+
+        foreach (var port in ports)
+        {
+            scope.ServiceProvider.GetRequiredService(port).ShouldNotBeNull(port.Name);
+        }
     }
 
     public void Dispose() => _connection.Dispose();

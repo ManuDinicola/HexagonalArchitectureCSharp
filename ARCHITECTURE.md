@@ -24,7 +24,7 @@ flowchart LR
 |---|---|---|
 | `MyApp.Domain` | nothing | Entities, `Result` / `Result<T>` (C# 15 unions), `Error`, domain errors |
 | `MyApp.Application` | Domain | Use cases (command/query + handler + validator), `Ports/Out`, mediator (`Messaging`, `Behaviors`) |
-| `MyApp.Infrastructure` | Application | Adapters: EF Core, clock. All `internal`; only `AddInfrastructure()` is public |
+| `MyApp.Infrastructure` | Application | Adapters: EF Core. All `internal`; only `AddInfrastructure()` is public |
 | `MyApp.Api` | Application, Infrastructure | Endpoints, contracts, ProblemDetails mapping, `Program.cs` wiring |
 
 Request flow: `Endpoint -> IDispatcher -> LoggingBehavior -> ValidationBehavior -> Handler -> Domain + Ports`.
@@ -34,7 +34,7 @@ Request flow: `Endpoint -> IDispatcher -> LoggingBehavior -> ValidationBehavior 
 1. **Dependencies point inwards.** Domain knows nothing; Application knows only Domain; adapters know Application.
 2. **Business rules live in the Domain.** Entities have private setters and static factory methods that enforce invariants. Handlers orchestrate, they don't decide.
 3. **Expected failures are `Result`, bugs are exceptions.** Never throw for "not found" or "invalid input".
-4. **Talk to the outside world only through ports.** Storage is `IOrderRepository`; time is the built-in `TimeProvider`. One specific port per aggregate, using only domain types.
+4. **Talk to the outside world only through ports.** Storage is `IOrderRepository`; time is the built-in `TimeProvider` (registered by `AddApplication()`). One specific port per aggregate, using only domain types.
 5. **Never leak internals.** The Api never returns entities (map to `Api.Contracts`) and never touches ports; adapters are `internal`.
 
 All five are enforced by the build (see the table in the README). If a rule blocks you, talk to the team. Do not edit the guardrail.

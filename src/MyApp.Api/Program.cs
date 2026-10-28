@@ -7,7 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddProblemDetails();
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration.GetConnectionString("Default")!);
+builder.Services.AddInfrastructure(builder.Configuration.GetConnectionString("Default")
+    ?? throw new InvalidOperationException("Missing connection string 'ConnectionStrings:Default'."));
 
 var app = builder.Build();
 

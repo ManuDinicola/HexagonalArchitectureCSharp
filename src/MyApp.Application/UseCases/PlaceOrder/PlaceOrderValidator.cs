@@ -3,6 +3,7 @@ using MyApp.Domain.Common;
 
 namespace MyApp.Application.UseCases.PlaceOrder;
 
+/// <summary>Shape only: what is missing, reported per field. Ranges and limits are business rules owned by the Domain.</summary>
 internal sealed class PlaceOrderValidator : IValidator<PlaceOrderCommand>
 {
     public Task<IReadOnlyList<Error>> ValidateAsync(PlaceOrderCommand request, CancellationToken cancellationToken)
@@ -26,16 +27,6 @@ internal sealed class PlaceOrderValidator : IValidator<PlaceOrderCommand>
                 if (string.IsNullOrWhiteSpace(line.Sku))
                 {
                     errors.Add(Error.Validation($"Lines[{i}].Sku", "Sku is required."));
-                }
-
-                if (line.Quantity <= 0)
-                {
-                    errors.Add(Error.Validation($"Lines[{i}].Quantity", "Quantity must be greater than zero."));
-                }
-
-                if (line.UnitPrice < 0)
-                {
-                    errors.Add(Error.Validation($"Lines[{i}].UnitPrice", "UnitPrice cannot be negative."));
                 }
             }
         }

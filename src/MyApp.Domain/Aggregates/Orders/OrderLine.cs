@@ -4,6 +4,9 @@ namespace MyApp.Domain.Aggregates.Orders;
 
 public sealed class OrderLine
 {
+    public const int SkuMaxLength = 50;
+    public const int UnitPriceScale = 2;
+
     private OrderLine() { } // EF Core
 
     private OrderLine(string sku, int quantity, decimal unitPrice)
@@ -25,6 +28,11 @@ public sealed class OrderLine
             return OrderErrors.SkuRequired;
         }
 
+        if (sku.Trim().Length > SkuMaxLength)
+        {
+            return OrderErrors.SkuTooLong;
+        }
+
         if (quantity <= 0)
         {
             return OrderErrors.InvalidQuantity;
@@ -35,6 +43,10 @@ public sealed class OrderLine
             return OrderErrors.InvalidUnitPrice;
         }
 
+        if (decimal.Round(unitPrice, UnitPriceScale) != unitPrice)
+        {
+            return OrderErrors.UnitPriceTooPrecise;
+        }
 
         return new OrderLine(sku.Trim(), quantity, unitPrice);
     }

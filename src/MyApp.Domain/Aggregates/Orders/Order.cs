@@ -4,6 +4,8 @@ namespace MyApp.Domain.Aggregates.Orders;
 
 public sealed class Order
 {
+    public const int CustomerIdMaxLength = 100;
+
     private readonly List<OrderLine> _lines = [];
 
     private Order() { } // EF Core
@@ -30,11 +32,15 @@ public sealed class Order
             return OrderErrors.CustomerRequired;
         }
 
+        if (customerId.Trim().Length > CustomerIdMaxLength)
+        {
+            return OrderErrors.CustomerTooLong;
+        }
+
         if (lines.Count == 0)
         {
             return OrderErrors.NoLines;
         }
-
 
         return new Order(Guid.NewGuid(), customerId.Trim(), placedAt, lines);
     }

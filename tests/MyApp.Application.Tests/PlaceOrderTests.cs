@@ -32,12 +32,12 @@ public class PlaceOrderTests : IAsyncLifetime
     [Fact]
     public async Task Invalid_command_is_rejected_by_validation_and_never_reaches_the_handler()
     {
-        var result = await _app.SendAsync(new PlaceOrderCommand("", [new PlaceOrderLine("", 0, -1m)]));
+        var result = await _app.SendAsync(new PlaceOrderCommand("", [new PlaceOrderLine("", 1, 1m)]));
 
         result.IsFailure.ShouldBeTrue();
         result.Errors.ShouldAllBe(e => e.Type == ErrorType.Validation);
         result.Errors.ShouldContain(e => e.Code == "CustomerId");
-        result.Errors.ShouldContain(e => e.Code == "Lines[0].Quantity");
+        result.Errors.ShouldContain(e => e.Code == "Lines[0].Sku");
         A.CallTo(() => _app.Orders.AddAsync(A<Order>._, A<CancellationToken>._)).MustNotHaveHappened();
     }
 
