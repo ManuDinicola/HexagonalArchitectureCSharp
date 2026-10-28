@@ -2,5 +2,6 @@
   <ItemGroup>
     <ProjectReference Include="..\MyApp.Application\MyApp.Application.csproj" />
     <ProjectReference Include="..\MyApp.Infrastructure\MyApp.Infrastructure.csproj" />
+    <InternalsVisibleTo Include="MyApp.Api.Tests" />
   </ItemGroup>
 </Project>

@@ -11,11 +11,8 @@ public partial class SourceLayoutTests
     [Fact]
     public void Each_source_file_declares_at_most_one_type()
     {
-        var src = Path.Combine(FindRepoRoot(), "src");
-        var violations = Directory.EnumerateFiles(src, "*.cs", SearchOption.AllDirectories)
-            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}")
-                     && !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}"))
-            .Select(f => (File: Path.GetRelativePath(src, f), Count: TopLevelType().Count(File.ReadAllText(f))))
+        var violations = Repo.SourceFiles("*.cs")
+            .Select(f => (File: Path.GetRelativePath(Repo.Src, f), Count: TopLevelType().Count(File.ReadAllText(f))))
             .Where(x => x.Count > 1)
             .Select(x => $"{x.File} ({x.Count} types)")
             .ToList();
@@ -23,14 +20,23 @@ public partial class SourceLayoutTests
         violations.ShouldBeEmpty("One class/record/interface/enum per file. Split: " + string.Join(", ", violations));
     }
 
-    private static string FindRepoRoot()
+    [Fact]
+    public void Each_file_is_named_after_the_type_it_declares()
     {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null && dir.GetFiles("*.slnx").Length == 0)
-        {
-            dir = dir.Parent;
-        }
+        var violations = Repo.SourceFiles("*.cs")
+            .Select(f => (File: f, Match: TypeName().Match(File.ReadAllText(f))))
+            .Where(x => x.Match.Success && !NamesFile(x.Match.Groups["name"].Value, Path.GetFileNameWithoutExtension(x.File)))
+            .Select(x => $"{Path.GetRelativePath(Repo.Src, x.File)} declares {x.Match.Groups["name"].Value}")
+            .ToList();
 
-        return dir?.FullName ?? throw new InvalidOperationException("Could not find the .slnx from " + AppContext.BaseDirectory);
+        violations.ShouldBeEmpty("Name the file after its type: " + string.Join(", ", violations));
     }
+
+    // Result<T> may live in ResultOfT.cs: a generic type may carry an "Of..." suffix.
+    private static bool NamesFile(string type, string file) =>
+        string.Equals(type, file, StringComparison.Ordinal)
+        || (file.StartsWith(type + "Of", StringComparison.Ordinal) && file.Length > type.Length + 2);
+
+    [GeneratedRegex(@"^(?:(?:public|internal|file)\s+)?(?:(?:sealed|static|abstract|partial|readonly)\s+)*(?:class|record(?:\s+struct)?|struct|interface|enum|union)\s+(?<name>\w+)", RegexOptions.Multiline, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex TypeName();
 }
