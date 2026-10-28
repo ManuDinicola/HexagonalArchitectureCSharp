@@ -48,9 +48,8 @@ public class DependencyRulesTests
 
         Refs(Layers.DomainAssembly).ShouldBeEmpty();
         Refs(Layers.ApplicationAssembly).ShouldBe([Layers.Domain]);
-        Refs(Layers.InfrastructureAssembly).ShouldContain(Layers.Application, StringComparer.Ordinal);
-        Refs(Layers.InfrastructureAssembly).ShouldBeSubsetOf([Layers.Application, Layers.Domain]);
-        Refs(Layers.ApiAssembly).ShouldBeSubsetOf([Layers.Application, Layers.Domain, Layers.Infrastructure]);
+        Refs(Layers.InfrastructureAssembly).Except([Layers.Application, Layers.Domain], StringComparer.Ordinal).ShouldBeEmpty();
+        Refs(Layers.ApiAssembly).Except([Layers.Application, Layers.Domain, Layers.Infrastructure], StringComparer.Ordinal).ShouldBeEmpty();
     }
 
     [Fact]

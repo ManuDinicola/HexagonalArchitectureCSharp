@@ -92,7 +92,7 @@ public class PlaceOrderTests : IAsyncLifetime
 
         await Should.ThrowAsync<InvalidOperationException>(() => _app.SendAsync(new GetOrderQuery(Guid.NewGuid())));
 
-        _app.Logs.Messages.ShouldContain("Error: GetOrderQuery threw an unhandled exception");
+        _app.Logs.Messages.ShouldContain(m => string.Equals(m, "Error: GetOrderQuery threw an unhandled exception", StringComparison.Ordinal));
     }
 
     [Fact]
