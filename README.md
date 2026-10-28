@@ -29,8 +29,10 @@ curl localhost:5000/orders/<id>
 
 ## Add a use case
 
-Copy the `UseCases/PlaceOrder` folder and rename it: a command (or query), an `internal` handler and an `internal` validator.
+Copy the `UseCases/PlaceOrder` folder and rename it: a command (`ICommand<...>`, changes state) or a query (`IRequest<...>`), an `internal` handler and an `internal` validator.
 Handlers and validators are found by assembly scanning: there is nothing to register.
+Commands stage their changes through repositories (`Add`, never `Save`); the pipeline commits them once, in one transaction, and only if the handler succeeded.
+The validator only checks the shape of the request (missing fields). Limits and ranges (max lengths, quantity > 0, price scale) are business rules and live in the Domain.
 Then add an endpoint in `MyApp.Api/Endpoints`. Read [ARCHITECTURE.md](ARCHITECTURE.md) for where things go.
 
 ## What fails the build
@@ -38,13 +40,14 @@ Then add an endpoint in `MyApp.Api/Endpoints`. Read [ARCHITECTURE.md](ARCHITECTU
 | Mistake | Caught by |
 |---|---|
 | `DateTime.Now/UtcNow`, `DateTimeOffset.Now/UtcNow` | `src/BannedSymbols.Common.txt` (RS0030), use an injected `TimeProvider` |
-| `Task.Result`, `Task.Wait()`, `GetAwaiter().GetResult()` | `src/BannedSymbols.Common.txt` (RS0030), use `await` |
+| `Task.Result`, `Task.Wait()`, `WaitAll/WaitAny`, `GetAwaiter().GetResult()` (Task and ValueTask), `Thread.Sleep` | `src/BannedSymbols.Common.txt` (RS0030), use `await` / `Task.Delay` |
 | Api calls an outbound port or an entity | RS0030 on usage + architecture tests on any reference |
 | Infrastructure calls use cases / mediator / behaviors | RS0030 on usage + architecture tests on any reference |
 | Domain/Application referencing EF Core or ASP.NET | architecture tests |
 | Wrong project reference direction | architecture tests |
 | Public DbContext / configuration / repository | architecture tests |
 | Entity with public setter or public constructor | architecture tests |
+| Handler or other use-case code committing changes itself (`IUnitOfWork`) | architecture tests (the pipeline does it) |
 | Request without exactly one handler | architecture tests |
 | Two types in one file | architecture tests (one class/record/interface/enum per file) |
 | Code smells, style, naming, missing braces, complexity | `AnalysisMode=All` + Roslynator, Meziantou, Sonar analyzers (same set as the WorkflowEg repo), tuned in `.editorconfig` |
@@ -58,7 +61,9 @@ that gap. Both work on namespaces, so new ports, entities and use cases are cove
 
 - **No MediatR / FluentAssertions** (licensing). A ~100-line mediator lives in `Application/Messaging`. Tests use xUnit + Shouldly (assertions) + FakeItEasy (fakes for outbound ports only; the pipeline itself is always real).
 - **Result instead of exceptions** for expected failures. `Result` and `Result<T>` are C# 15 unions (`Succeeded | Failed`, `T | Failed`): pattern match them, or check `IsSuccess` and call `Unwrap()` (which throws, because unwrapping a failure is a bug). Exceptions mean bugs and become a 500 ProblemDetails.
-- **One port per aggregate.** No generic repository.
+- **One port per aggregate.** No generic repository. Repositories only stage changes; a separate `IUnitOfWork` port commits them. `UnitOfWorkBehavior` (innermost pipeline step, commands only) calls it once per successful command, so a failed result never persists anything and a command touching several aggregates is atomic.
+- **Validation split.** The validator reports what is missing, per field. The Domain owns every business rule and limit (the same constants feed the EF mapping), so the database never rejects what the Domain accepted.
+- **Time.** `TimeProvider` is registered by `AddApplication()` (`TryAdd`, so a host or a test can register its own first).
 - **SQLite + `EnsureCreated`** to keep the template runnable. Switch to EF migrations when your model starts to change.
 
 ## Renaming `MyApp`

@@ -22,7 +22,7 @@ flowchart LR
 
 | Project | References | Contains |
 |---|---|---|
-| `MyApp.Domain` | nothing | Entities, `Result` / `Result<T>` (C# 15 unions), `Error`, domain errors |
+| `MyApp.Domain` | nothing | Entities, business rules and limits, `Result` / `Result<T>` (C# 15 unions), `Error`, domain errors |
 | `MyApp.Application` | Domain | Use cases (command/query + handler + validator), `Ports/Out`, mediator (`Messaging`, `Behaviors`) |
 | `MyApp.Infrastructure` | Application | Adapters: EF Core. All `internal`; only `AddInfrastructure()` is public |
 | `MyApp.Api` | Application, Infrastructure | Endpoints, contracts, ProblemDetails mapping, `Program.cs` wiring |
@@ -34,7 +34,7 @@ Request flow: `Endpoint -> IDispatcher -> LoggingBehavior -> ValidationBehavior 
 1. **Dependencies point inwards.** Domain knows nothing; Application knows only Domain; adapters know Application.
 2. **Business rules live in the Domain.** Entities have private setters and static factory methods that enforce invariants. Handlers orchestrate, they don't decide.
 3. **Expected failures are `Result`, bugs are exceptions.** Never throw for "not found" or "invalid input".
-4. **Talk to the outside world only through ports.** Storage is `IOrderRepository`; time is the built-in `TimeProvider` (registered by `AddApplication()`). One specific port per aggregate, using only domain types.
+4. **Talk to the outside world only through ports.** Storage is `IOrderRepository`; time is the built-in `TimeProvider` (registered by `AddApplication()`). One specific port per aggregate, using only domain types. Repositories stage changes; `IUnitOfWork` commits them.
 5. **Never leak internals.** The Api never returns entities (map to `Api.Contracts`) and never touches ports; adapters are `internal`.
 
 All five are enforced by the build (see the table in the README). If a rule blocks you, talk to the team. Do not edit the guardrail.
@@ -46,7 +46,8 @@ All five are enforced by the build (see the table in the README). If a rule bloc
 | Add a business rule or invariant | `Domain/<Aggregate>`: entity factory or method, plus a Domain test |
 | Add an error returned to callers | `Domain/<Aggregate>/<Aggregate>Errors.cs` |
 | Add a use case | copy `Application/UseCases/PlaceOrder` (command + handler + validator) |
-| Check request shape (required, ranges) | the use case's `Validator` |
+| Check request shape (is a field missing?) | the use case's `Validator` (shape only; ranges and limits belong in the Domain) |
+| Add a limit or range (max length, quantity > 0) | a constant and a check in the Domain entity; reuse the constant in the EF mapping |
 | Need something from the outside (DB, clock, HTTP service) | an interface in `Application/Ports/Out`, domain types only |
 | Implement that interface | `Infrastructure/...` as an `internal` class, registered in `AddInfrastructure()` |
 | Add an EF mapping | an `IEntityTypeConfiguration<T>` in `Infrastructure/Persistence` (picked up automatically) |
@@ -55,6 +56,13 @@ All five are enforced by the build (see the table in the README). If a rule bloc
 | Cross-cutting concern around every use case | an `IPipelineBehavior` in `Application/Behaviors`, registered in `AddApplication()` (order = execution order) |
 | Change state | implement `ICommand<...>` (not `IRequest`); the handler stages changes through repositories and the pipeline saves them once, in one transaction, only on success. Never call `SaveChanges` yourself |
 | Read the current time | inject `TimeProvider` and call `GetUtcNow()` (never `DateTime.UtcNow`) |
+
+## Commands, queries and the unit of work
+
+- A **query** implements `IRequest<Result<T>>` and never changes state.
+- A **command** implements `ICommand<Result<T>>`. Its handler calls `repository.Add(...)` (staging only) and returns a `Result`.
+- `UnitOfWorkBehavior` then calls `IUnitOfWork.SaveChangesAsync` once if, and only if, the result is a success. Everything the command staged is committed in one transaction. A validation or domain failure persists nothing.
+- Handlers never call `IUnitOfWork` themselves; an architecture test enforces it.
 
 ## Nothing to maintain for the guardrails
 
