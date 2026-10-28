@@ -13,6 +13,8 @@ tests/  Domain.Tests, Application.Tests, Infrastructure.Tests, Api.Tests (end to
 .NET 11 SDK (currently release candidate; `global.json` allows prerelease). The code uses C# 15 **union types**
 (`LangVersion=preview`) for `Result` / `Result<T>`.
 
+> **Preview toolchain.** The template targets a .NET 11 release candidate and C# 15 unions, so tooling (IDE, analyzers) may lag. Expect odd diagnostics around `Result`; the SDK may also change generated code (it once made `Program` public: it is now pinned `internal`). Move to the stable SDK when .NET 11 ships.
+
 ## Quick start
 
 ```bash
@@ -56,6 +58,9 @@ Every rule below is enforced by the compiler, an analyzer or a test: run `dotnet
 | Request without exactly one handler; a `*Command` that is not an `ICommand`, a `*Query` that is; a request named neither | architecture tests |
 | Port that is not an interface, is generic, knows the use cases/EF, or has an async method without a `CancellationToken` | architecture tests |
 | Two types in one file, or a file not named after its type | architecture tests (`SourceLayoutTests`) |
+| Domain/Application doing I/O (`System.IO`, `System.Net.Http`), `Console`, `Random`, `Environment` | per-project `BannedSymbols.txt` in `MyApp.Domain` and `MyApp.Application` (RS0030): define a port instead |
+| Weakening the guardrails (RS0030 no longer an error, warnings no longer errors, a banned list emptied or deleted, a banned namespace that matches nothing) | `GuardrailIntegrityTests` |
+| A source file hidden by `.gitignore` (the build passes locally and fails on every clone) | `GuardrailIntegrityTests` (`git check-ignore`) |
 | Code smells, style, naming, missing braces, complexity | `AnalysisMode=All` + Roslynator, Meziantou, Sonar analyzers, tuned in `.editorconfig` |
 | Warnings (nullable, unused, ...) | `TreatWarningsAsErrors` |
 | Silencing a warning in production code (`#pragma warning disable`, `SuppressMessage`, `<NoWarn>`) | architecture tests (`SourceLayoutTests`) |
@@ -79,6 +84,18 @@ The guardrails themselves were tested the hard way: each rule above was broken o
 - **SQLite + `EnsureCreated`** to keep the template runnable. It does not evolve an existing database (an old `myapp.db` lacks newer columns: delete it). Switch to EF migrations when your model starts to change.
 
 ## Renaming `MyApp`
+
+On Windows without bash, in PowerShell:
+
+```powershell
+$skip = '[\\/](\.git|bin|obj)[\\/]'
+Get-ChildItem -Recurse -File -Exclude *.dll,*.pdb | Where-Object { $_.FullName -notmatch $skip } |
+  ForEach-Object { (Get-Content $_ -Raw) -replace 'MyApp','Acme' | Set-Content $_ -NoNewline }
+Get-ChildItem -Recurse -Filter '*MyApp*' | Where-Object { $_.FullName -notmatch $skip } |
+  Sort-Object { $_.FullName.Length } -Descending | ForEach-Object { Rename-Item $_.FullName ($_.Name -replace 'MyApp','Acme') }
+```
+
+Or with bash/GNU sed:
 
 ```bash
 grep -rlI MyApp . --exclude-dir=.git --exclude-dir=bin --exclude-dir=obj | xargs sed -i 's/MyApp/Acme/g'

@@ -9,7 +9,7 @@ dotnet build     # warnings and banned APIs are errors
 dotnet test      # domain, application, infrastructure, end-to-end API and architecture tests
 ```
 
-Run both before every commit.
+Run both before every commit. There is no CI: this is the only gate. Before you finish, also check `git status` for untracked files you created (a new file that is ignored by `.gitignore` is missing from every clone; `GuardrailIntegrityTests` catches it).
 
 ## Rules that cannot be negotiated
 

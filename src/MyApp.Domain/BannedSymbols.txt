@@ -1,0 +1,6 @@
+# The Domain is pure: no I/O, no environment, no randomness, no clock. Inputs arrive as parameters.
+T:System.Console;The Domain does not write to the console. Return a Result or throw for bugs.
+T:System.Random;Randomness is an outside concern. Pass the value in as a parameter.
+T:System.Environment;The Domain does not read the environment. Pass configuration in as a parameter.
+N:System.IO;The Domain does no I/O. Define a port in Application/Ports/Out and implement it in Infrastructure.
+N:System.Net.Http;The Domain does no network calls. Define a port in Application/Ports/Out and implement it in Infrastructure.

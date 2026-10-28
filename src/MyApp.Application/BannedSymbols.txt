@@ -1,0 +1,6 @@
+# Application orchestrates; everything outside the process goes through a port in Ports/Out.
+T:System.Console;Use ILogger for output.
+T:System.Random;Randomness is an outside concern. Define a port in Ports/Out.
+T:System.Environment;Configuration reaches Application through a port or options, not the environment.
+N:System.IO;No file or stream I/O in Application. Define a port in Ports/Out and implement it in Infrastructure.
+N:System.Net.Http;No HTTP in Application. Define a port in Ports/Out and implement it in Infrastructure.
