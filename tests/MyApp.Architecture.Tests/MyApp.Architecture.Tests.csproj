@@ -4,6 +4,7 @@
     <ProjectReference Include="..\..\src\MyApp.Application\MyApp.Application.csproj" />
     <ProjectReference Include="..\..\src\MyApp.Infrastructure\MyApp.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\MyApp.Api\MyApp.Api.csproj" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
     <PackageReference Include="NetArchTest.Rules" />
   </ItemGroup>
 </Project>

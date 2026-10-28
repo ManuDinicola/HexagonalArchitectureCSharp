@@ -65,7 +65,7 @@ Every rule below is enforced by the compiler, an analyzer or a test: run `dotnet
 | Handler or other use-case code committing changes itself (`IUnitOfWork`) | architecture tests (the pipeline does it) |
 | Request without exactly one handler; a `*Command` that is not an `ICommand`, a `*Query` that is; a request named neither | architecture tests |
 | Port that is not an interface, is generic, knows the use cases/EF, or has an async method without a `CancellationToken` | architecture tests |
-| Two types in one file, or a file not named after its type | architecture tests (`SourceLayoutTests`) |
+| Two types in one file, or a file not named after its type | architecture tests (`SourceLayoutTests`, on the Roslyn syntax tree; it also fails if a file does not parse, so the rule cannot pass silently) |
 | Domain/Application doing I/O (`System.IO`, `System.Net.Http`), `Console`, `Random`, `Environment` | per-project `BannedSymbols.txt` in `MyApp.Domain` and `MyApp.Application` (RS0030): define a port instead |
 | Weakening the guardrails (RS0030 no longer an error, warnings no longer errors, a banned list emptied or deleted, a banned namespace that matches nothing) | `GuardrailIntegrityTests` |
 | A source file hidden by `.gitignore` (the build passes locally and fails on every clone) | `GuardrailIntegrityTests` (`git check-ignore`) |
