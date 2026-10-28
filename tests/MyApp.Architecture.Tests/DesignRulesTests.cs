@@ -60,6 +60,14 @@ public class DesignRulesTests
     }
 
     [Fact]
+    public void Use_cases_never_commit_themselves_the_pipeline_does()
+    {
+        AssertNoViolations(Types.InAssembly(Layers.ApplicationAssembly)
+            .That().ResideInNamespaceStartingWith(Layers.UseCases)
+            .ShouldNot().HaveDependencyOn(typeof(MyApp.Application.Ports.Out.IUnitOfWork).FullName!).GetResult());
+    }
+
+    [Fact]
     public void Every_request_has_exactly_one_handler()
     {
         var assembly = Layers.ApplicationAssembly;

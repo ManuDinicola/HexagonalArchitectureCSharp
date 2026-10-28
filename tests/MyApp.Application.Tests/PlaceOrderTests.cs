@@ -22,7 +22,8 @@ public class PlaceOrderTests : IAsyncLifetime
         var result = await _app.SendAsync(ValidCommand());
 
         result.IsSuccess.ShouldBeTrue();
-        A.CallTo(() => _app.Orders.AddAsync(A<Order>._, A<CancellationToken>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _app.Orders.Add(A<Order>._)).MustHaveHappenedOnceExactly();
+        A.CallTo(() => _app.UnitOfWork.SaveChangesAsync(A<CancellationToken>._)).MustHaveHappenedOnceExactly();
         var order = _app.Saved.ShouldHaveSingleItem();
         order.Id.ShouldBe(result.Unwrap());
         order.PlacedAt.ShouldBe(TestApp.Now);
@@ -38,7 +39,28 @@ public class PlaceOrderTests : IAsyncLifetime
         result.Errors.ShouldAllBe(e => e.Type == ErrorType.Validation);
         result.Errors.ShouldContain(e => e.Code == "CustomerId");
         result.Errors.ShouldContain(e => e.Code == "Lines[0].Sku");
-        A.CallTo(() => _app.Orders.AddAsync(A<Order>._, A<CancellationToken>._)).MustNotHaveHappened();
+        A.CallTo(() => _app.Orders.Add(A<Order>._)).MustNotHaveHappened();
+        A.CallTo(() => _app.UnitOfWork.SaveChangesAsync(A<CancellationToken>._)).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task Domain_failure_stages_nothing_and_saves_nothing()
+    {
+        var tooLong = new string('s', OrderLine.SkuMaxLength + 1);
+
+        var result = await _app.SendAsync(new PlaceOrderCommand("cust-1", [new PlaceOrderLine(tooLong, 1, 1m)]));
+
+        result.Errors.ShouldHaveSingleItem().ShouldBe(OrderErrors.SkuTooLong);
+        A.CallTo(() => _app.UnitOfWork.SaveChangesAsync(A<CancellationToken>._)).MustNotHaveHappened();
+        _app.Saved.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Queries_never_save()
+    {
+        await _app.SendAsync(new GetOrderQuery(Guid.NewGuid()));
+
+        A.CallTo(() => _app.UnitOfWork.SaveChangesAsync(A<CancellationToken>._)).MustNotHaveHappened();
     }
 
     [Fact]

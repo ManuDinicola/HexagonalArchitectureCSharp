@@ -28,7 +28,7 @@ internal sealed class PlaceOrderHandler(IOrderRepository orders, TimeProvider ti
             return Result.Failure<Guid>(order.Errors[0]);
         }
 
-        await orders.AddAsync(order.Unwrap(), cancellationToken);
+        orders.Add(order.Unwrap());
         return order.Unwrap().Id;
     }
 }

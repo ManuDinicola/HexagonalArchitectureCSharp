@@ -15,6 +15,7 @@ public static class DependencyInjection
         // Order matters: first registered = outermost. Logging sees validation failures.
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(UnitOfWorkBehavior<,>)); // commands only (constraint)
 
         // Handlers and validators are found by scanning; nobody registers them by hand.
         foreach (var type in typeof(DependencyInjection).Assembly.GetTypes().Where(t => t is { IsClass: true, IsAbstract: false }))

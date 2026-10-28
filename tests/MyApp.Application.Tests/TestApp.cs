@@ -17,8 +17,14 @@ public sealed class TestApp : IAsyncDisposable
     public TestApp()
     {
         // Behaves like a tiny in-memory repository.
-        A.CallTo(() => Orders.AddAsync(A<Order>._, A<CancellationToken>._))
-            .Invokes((Order o, CancellationToken _) => Saved.Add(o))
+        // Staged until SaveChangesAsync, like a real unit of work.
+        A.CallTo(() => Orders.Add(A<Order>._)).Invokes((Order o) => Staged.Add(o));
+        A.CallTo(() => UnitOfWork.SaveChangesAsync(A<CancellationToken>._))
+            .Invokes(() =>
+            {
+                Saved.AddRange(Staged);
+                Staged.Clear();
+            })
             .Returns(Task.CompletedTask);
         A.CallTo(() => Orders.GetByIdAsync(A<Guid>._, A<CancellationToken>._))
             .ReturnsLazily((Guid id, CancellationToken _) => Task.FromResult(Saved.FirstOrDefault(o => o.Id == id)));
@@ -28,6 +34,7 @@ public sealed class TestApp : IAsyncDisposable
         services.AddLogging(b => b.SetMinimumLevel(LogLevel.Trace).AddProvider(Logs));
         services.AddApplication();
         services.AddSingleton(Orders);
+        services.AddSingleton(UnitOfWork);
         services.AddSingleton(Time);
         _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
     }
@@ -36,7 +43,9 @@ public sealed class TestApp : IAsyncDisposable
 
     public ListLoggerProvider Logs { get; } = new();
     public IOrderRepository Orders { get; } = A.Fake<IOrderRepository>();
+    public IUnitOfWork UnitOfWork { get; } = A.Fake<IUnitOfWork>();
     public TimeProvider Time { get; } = A.Fake<TimeProvider>();
+    public List<Order> Staged { get; } = [];
     public List<Order> Saved { get; } = [];
 
     public async Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request)

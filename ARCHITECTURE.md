@@ -27,7 +27,7 @@ flowchart LR
 | `MyApp.Infrastructure` | Application | Adapters: EF Core. All `internal`; only `AddInfrastructure()` is public |
 | `MyApp.Api` | Application, Infrastructure | Endpoints, contracts, ProblemDetails mapping, `Program.cs` wiring |
 
-Request flow: `Endpoint -> IDispatcher -> LoggingBehavior -> ValidationBehavior -> Handler -> Domain + Ports`.
+Request flow: `Endpoint -> IDispatcher -> LoggingBehavior -> ValidationBehavior -> UnitOfWorkBehavior (commands) -> Handler -> Domain + Ports`.
 
 ## The 5 golden rules
 
@@ -53,6 +53,7 @@ All five are enforced by the build (see the table in the README). If a rule bloc
 | Add an HTTP endpoint | `Api/Endpoints`; request/response records in `Api/Contracts`; call `IDispatcher` |
 | Map an error to an HTTP status | `Api/Endpoints/ResultExtensions.cs` |
 | Cross-cutting concern around every use case | an `IPipelineBehavior` in `Application/Behaviors`, registered in `AddApplication()` (order = execution order) |
+| Change state | implement `ICommand<...>` (not `IRequest`); the handler stages changes through repositories and the pipeline saves them once, in one transaction, only on success. Never call `SaveChanges` yourself |
 | Read the current time | inject `TimeProvider` and call `GetUtcNow()` (never `DateTime.UtcNow`) |
 
 ## Nothing to maintain for the guardrails
