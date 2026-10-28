@@ -32,7 +32,7 @@ Then add an endpoint in `MyApp.Api/Endpoints`. Read [ARCHITECTURE.md](ARCHITECTU
 
 | Mistake | Caught by |
 |---|---|
-| `DateTime.Now/UtcNow`, `DateTimeOffset.Now/UtcNow` | `BannedSymbols.txt` (RS0030), use `IClock` |
+| `DateTime.Now/UtcNow`, `DateTimeOffset.Now/UtcNow` | `BannedSymbols.txt` (RS0030), use an injected `TimeProvider` |
 | `Task.Result`, `Task.Wait()`, `GetAwaiter().GetResult()` | `BannedSymbols.txt` (RS0030), use `await` |
 | Api calls an outbound port or an entity | RS0030 on usage + architecture tests on any reference |
 | Infrastructure calls use cases / mediator / behaviors | RS0030 on usage + architecture tests on any reference |
@@ -41,6 +41,7 @@ Then add an endpoint in `MyApp.Api/Endpoints`. Read [ARCHITECTURE.md](ARCHITECTU
 | Public DbContext / configuration / repository | architecture tests |
 | Entity with public setter or public constructor | architecture tests |
 | Request without exactly one handler | architecture tests |
+| Two types in one file | architecture tests (one class/record/interface/enum per file) |
 | Warnings (nullable, unused, ...) | `TreatWarningsAsErrors` |
 
 Note on the two layers: the Roslyn banned-API analyzer flags *uses* (calls, `new`, `typeof`) with a precise

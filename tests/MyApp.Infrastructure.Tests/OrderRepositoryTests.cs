@@ -59,7 +59,7 @@ public sealed class OrderRepositoryTests : IDisposable
         await using var scope = provider.CreateAsyncScope();
 
         scope.ServiceProvider.GetRequiredService<IOrderRepository>().ShouldNotBeNull();
-        scope.ServiceProvider.GetRequiredService<IClock>().UtcNow.ShouldBeGreaterThan(DateTimeOffset.UnixEpoch);
+        scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow().ShouldBeGreaterThan(DateTimeOffset.UnixEpoch);
     }
 
     public void Dispose() => _connection.Dispose();

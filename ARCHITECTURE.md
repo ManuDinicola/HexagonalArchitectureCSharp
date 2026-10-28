@@ -34,7 +34,7 @@ Request flow: `Endpoint -> IDispatcher -> LoggingBehavior -> ValidationBehavior 
 1. **Dependencies point inwards.** Domain knows nothing; Application knows only Domain; adapters know Application.
 2. **Business rules live in the Domain.** Entities have private setters and static factory methods that enforce invariants. Handlers orchestrate, they don't decide.
 3. **Expected failures are `Result`, bugs are exceptions.** Never throw for "not found" or "invalid input".
-4. **Talk to the outside world only through ports.** Time is `IClock`, storage is `IOrderRepository`. One specific port per aggregate, using only domain types.
+4. **Talk to the outside world only through ports.** Storage is `IOrderRepository`; time is the built-in `TimeProvider`. One specific port per aggregate, using only domain types.
 5. **Never leak internals.** The Api never returns entities (map to `Api.Contracts`) and never touches ports; adapters are `internal`.
 
 All five are enforced by the build (see the table in the README). If a rule blocks you, talk to the team. Do not edit the guardrail.
@@ -53,7 +53,7 @@ All five are enforced by the build (see the table in the README). If a rule bloc
 | Add an HTTP endpoint | `Api/Endpoints`; request/response records in `Api/Contracts`; call `IDispatcher` |
 | Map an error to an HTTP status | `Api/Endpoints/ResultExtensions.cs` |
 | Cross-cutting concern around every use case | an `IPipelineBehavior` in `Application/Behaviors`, registered in `AddApplication()` (order = execution order) |
-| Read the current time | inject `IClock` (never `DateTime.UtcNow`) |
+| Read the current time | inject `TimeProvider` and call `GetUtcNow()` (never `DateTime.UtcNow`) |
 
 ## When you add a new port, entity or use case
 

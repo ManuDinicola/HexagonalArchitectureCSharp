@@ -22,13 +22,13 @@ public sealed class TestApp : IAsyncDisposable
             .Returns(Task.CompletedTask);
         A.CallTo(() => Orders.GetByIdAsync(A<Guid>._, A<CancellationToken>._))
             .ReturnsLazily((Guid id, CancellationToken _) => Task.FromResult(Saved.FirstOrDefault(o => o.Id == id)));
-        A.CallTo(() => Clock.UtcNow).Returns(Now);
+        A.CallTo(() => Time.GetUtcNow()).Returns(Now);
 
         var services = new ServiceCollection();
         services.AddLogging(b => b.SetMinimumLevel(LogLevel.Trace).AddProvider(Logs));
         services.AddApplication();
         services.AddSingleton(Orders);
-        services.AddSingleton(Clock);
+        services.AddSingleton(Time);
         _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
     }
 
@@ -36,7 +36,7 @@ public sealed class TestApp : IAsyncDisposable
 
     public ListLoggerProvider Logs { get; } = new();
     public IOrderRepository Orders { get; } = A.Fake<IOrderRepository>();
-    public IClock Clock { get; } = A.Fake<IClock>();
+    public TimeProvider Time { get; } = A.Fake<TimeProvider>();
     public List<Order> Saved { get; } = [];
 
     public async Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request)

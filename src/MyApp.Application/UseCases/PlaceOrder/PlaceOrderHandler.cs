@@ -5,7 +5,7 @@ using MyApp.Domain.Orders;
 
 namespace MyApp.Application.UseCases.PlaceOrder;
 
-internal sealed class PlaceOrderHandler(IOrderRepository orders, IClock clock)
+internal sealed class PlaceOrderHandler(IOrderRepository orders, TimeProvider time)
     : IRequestHandler<PlaceOrderCommand, Result<Guid>>
 {
     public async Task<Result<Guid>> HandleAsync(PlaceOrderCommand request, CancellationToken cancellationToken)
@@ -18,7 +18,7 @@ internal sealed class PlaceOrderHandler(IOrderRepository orders, IClock clock)
             lines.Add(created.Value);
         }
 
-        var order = Order.Place(request.CustomerId, lines, clock.UtcNow);
+        var order = Order.Place(request.CustomerId, lines, time.GetUtcNow());
         if (order.IsFailure) return Result.Failure<Guid>(order.Errors[0]);
 
         await orders.AddAsync(order.Value, cancellationToken);

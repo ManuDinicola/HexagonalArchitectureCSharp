@@ -1,13 +1,5 @@
 namespace MyApp.Domain.Common;
 
-public enum ErrorType
-{
-    Failure,
-    Validation,
-    NotFound,
-    Conflict,
-}
-
 /// <summary>An expected failure. Code is stable and machine-readable; Message is for humans.</summary>
 public sealed record Error(string Code, string Message, ErrorType Type)
 {
