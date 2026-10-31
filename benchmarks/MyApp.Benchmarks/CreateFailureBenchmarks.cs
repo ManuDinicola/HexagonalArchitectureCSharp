@@ -1,6 +1,6 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
-using Candidate = MyApp.Domain.Common;
+using Candidate = MyApp.Benchmarks.HandwrittenUnion;
 using Keyword = MyApp.Benchmarks.KeywordUnion;
 
 namespace MyApp.Benchmarks;

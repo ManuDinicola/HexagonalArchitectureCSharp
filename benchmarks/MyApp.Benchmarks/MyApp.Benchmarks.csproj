@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Compares the keyword-based Result (frozen copy in KeywordUnion/, from commit c6994c6) with MyApp.Domain's hand-written [Union] Result. Not part of the product. -->
+  <!-- Compares the keyword-based Result (frozen copy in KeywordUnion/, commit c6994c6, what src uses) with the hand-written [Union] alternative (HandwrittenUnion/, commit a5a8e3d). Self-contained: references no product project. Not part of the product. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
@@ -7,6 +7,5 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" />
-    <ProjectReference Include="..\..\src\MyApp.Domain\MyApp.Domain.csproj" />
   </ItemGroup>
 </Project>

@@ -3,7 +3,7 @@
 Question: is it worth replacing the C# 15 `union` keyword (one `object? Value` field, so value-type cases are boxed) with hand-written `[Union]` structs (one typed field per case plus a state byte)?
 
 - **Baseline** (`Keyword_*`): the keyword implementation at commit `c6994c6`, copied unchanged into `benchmarks/MyApp.Benchmarks/KeywordUnion` (namespace `MyApp.Benchmarks.KeywordUnion`).
-- **Candidate** (`Handwritten_*`): `MyApp.Domain.Common.Result` / `Result<T>` as committed in `a5a8e3d`.
+- **Candidate** (`Handwritten_*`): the hand-written `[Union]` structs from commit `a5a8e3d`, kept in `benchmarks/MyApp.Benchmarks/HandwrittenUnion` (namespace `MyApp.Benchmarks.HandwrittenUnion`). They are not used by `src`.
 
 ## Machine
 
@@ -70,4 +70,8 @@ What it loses:
 
 Net effect in this template: the absolute differences are a few nanoseconds per request (a few bytes of garbage versus a few ns of extra matching), against an HTTP request, validation, and a SQLite round trip that cost microseconds to milliseconds. Neither version will show up in a real profile of this application.
 
-**Recommendation:** the evidence does not justify the extra code for this template. Keep the hand-written version only if you care specifically about allocation-free success results for value types on a hot path (a high-throughput service returning `Result<Guid>` / `Result<int>`), and accept slower switches. Otherwise the keyword `union` is simpler, equally correct, and faster to consume. Reverting is a decision for you: nothing has been reverted. Revisit when the final .NET 11 / C# 15 compiler ships, since the switch lowering for user-written unions may change.
+**Decision: `src` keeps the `union` keyword.** The hand-written version was reverted out of `MyApp.Domain` (it lives on in `HandwrittenUnion/` for reproducibility). It is the fastest to consume, equal or faster for failures and reference payloads, needs no hand-written code or contract tests, and the compiler owns it. The only cost is one 24-32 B allocation per successful value-type result (in this template, `Result<Guid>` from `PlaceOrder`), which is noise next to the database round trip.
+
+A leaner hand-written layout (one `object?` state plus the `T` field, no state byte) was also tried and was not better: its success switch measured about 2x slower than the layout above (7.7 vs 3.6 ns). The cost comes from copying a 24-32 byte struct, against the keyword form's single 8-byte reference.
+
+If a profile ever shows the allocation matters, return a reference payload on that one hot path before reintroducing custom union code. Revisit when the final .NET 11 / C# 15 compiler ships.
