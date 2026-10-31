@@ -1,3 +1,4 @@
 # Namespace bans cover every type inside, including types added later: nothing to maintain.
 N:MyApp.Application.Ports.Out;Api must not use outbound ports. Send a command or query through IDispatcher.
 N:MyApp.Domain.Aggregates;Never expose domain entities from the API. Map Application DTOs to Api.Contracts.
+M:MyApp.Domain.Common.Result`1.Unwrap;Unwrap is for tests only. Pattern match the result: result switch { Failed f => ..., T value => ... }.

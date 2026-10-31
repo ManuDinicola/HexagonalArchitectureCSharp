@@ -14,12 +14,11 @@ internal sealed class PlaceOrderHandler(IOrderRepository orders, TimeProvider ti
         var drafts = request.Lines.Select(l => new OrderLineDraft(l.Sku, l.Quantity, l.UnitPrice)).ToList();
 
         var placed = Order.Place(Guid.CreateVersion7(now), request.CustomerId, drafts, now);
-        if (placed.IsFailure)
+        if (placed is not Order order)
         {
             return Task.FromResult(Result.Failure<Guid>(placed.Errors));
         }
 
-        var order = placed.Unwrap();
         orders.Add(order);
         return Task.FromResult<Result<Guid>>(order.Id);
     }

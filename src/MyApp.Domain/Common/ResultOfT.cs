@@ -1,13 +1,13 @@
 namespace MyApp.Domain.Common;
 
-/// <summary>A value of type <typeparamref name="T"/>, or <see cref="Failed"/>. Pattern match it, or use <see cref="Unwrap"/>.</summary>
+/// <summary>A value of type <typeparamref name="T"/>, or <see cref="Failed"/>. Pattern match it. <see cref="Unwrap"/> is for tests only.</summary>
 public union Result<T>(T, Failed) : IResult<Result<T>>
 {
     public bool IsSuccess => Value is T;
     public bool IsFailure => !IsSuccess;
     public IReadOnlyList<Error> Errors => Value is Failed failed ? failed.Errors : [];
 
-    /// <summary>Reading the value of a failed result is a bug, so it throws. Check <see cref="IsSuccess"/> first.</summary>
+    /// <summary>Tests only (banned in src). Reading the value of a failed result is a bug, so it throws.</summary>
     public T Unwrap() => Value is T value
         ? value
         : throw new InvalidOperationException("Cannot unwrap a failed result. Check IsSuccess first.");

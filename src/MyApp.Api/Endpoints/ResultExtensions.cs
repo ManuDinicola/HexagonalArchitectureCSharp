@@ -5,7 +5,7 @@ namespace MyApp.Api.Endpoints;
 internal static class ResultExtensions
 {
     /// <summary>The single place where expected failures become HTTP ProblemDetails.</summary>
-    public static IResult ToProblem<TResult>(this TResult result) where TResult : IResult<TResult>
+    public static IResult ToProblem(this Failed result)
     {
         var errors = result.Errors;
 
@@ -35,4 +35,5 @@ internal static class ResultExtensions
 
         return Results.Problem(statusCode: status, title: first.Code, detail: first.Message);
     }
+
 }

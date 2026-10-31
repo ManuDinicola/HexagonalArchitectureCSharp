@@ -56,9 +56,9 @@ public sealed class Order
         for (var i = 0; i < lines.Count; i++)
         {
             var line = OrderLine.Create(lines[i].Sku, lines[i].Quantity, lines[i].UnitPrice);
-            if (line.IsSuccess)
+            if (line is OrderLine valid)
             {
-                created.Add(line.Unwrap());
+                created.Add(valid);
             }
             else
             {

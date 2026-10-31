@@ -2,3 +2,4 @@
 N:MyApp.Application.UseCases;Adapters implement ports, they never call use cases. Depend on Application.Ports.Out only.
 N:MyApp.Application.Messaging;Adapters never talk to the mediator. Depend on Application.Ports.Out only.
 N:MyApp.Application.Behaviors;Adapters never use pipeline behaviors. Depend on Application.Ports.Out only.
+M:MyApp.Domain.Common.Result`1.Unwrap;Unwrap is for tests only. Pattern match the result: result switch { Failed f => ..., T value => ... }.
