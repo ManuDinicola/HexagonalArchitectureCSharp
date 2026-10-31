@@ -431,3 +431,6 @@ FodyWeavers.xsd
 *.db
 *.db-shm
 *.db-wal
+
+# BenchmarkDotNet output
+BenchmarkDotNet.Artifacts/
