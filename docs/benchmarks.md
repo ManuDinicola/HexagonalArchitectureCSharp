@@ -54,6 +54,25 @@ Notes:
 - The reported CS8780 for pattern matching on an open generic `T` did not reproduce here. What the compiler does report is CS8655: with an unconstrained `T` the switch is not exhaustive because `T` may be null. So the generic `CreateSuccessBenchmarks<T>` only creates results, and the read benchmarks use closed types (`Guid`, `string`).
 - The benchmark sources use the same consuming code on both sides, apart from the type names.
 
+### Big payloads (a 128-byte struct and a large DTO)
+
+Added after the first run to cover realistic large results. `BigStruct` is 16 `long`s (128 B); `BigDto` is an order-shaped record with 100 lines.
+
+| Scenario | Keyword mean | Hand-written mean | Ratio | Keyword alloc | Hand-written alloc |
+|---|---:|---:|---:|---:|---:|
+| Create success, `BigStruct` | 8.91 ns | 7.13 ns | 0.81 | 144 B | 0 |
+| Create success, `BigDto` | 0.22 ns | 2.11 ns | 9.46 | 0 | 0 |
+| Switch success, `BigStruct` | 1.12 ns | 11.47 ns | 10.28 | 0 | 0 |
+| Switch failure, `BigStruct` | 1.12 ns | 5.65 ns | 5.05 | 0 | 0 |
+| Switch success, `BigDto` | 2.61 ns | 6.54 ns | 2.51 | 0 | 0 |
+| Switch failure, `BigDto` | 1.10 ns | 2.40 ns | 2.19 | 0 | 0 |
+| `IsSuccess` + `Errors`, `BigStruct` / `BigDto` | 1.39 / 1.08 ns | 0.71 / 0.68 ns | 0.51 / 0.63 | 0 | 0 |
+
+Reading it:
+- A large **reference** payload (the usual case: DTOs, aggregates, read models) behaves like `string`: already allocation-free with the keyword form, and the keyword form is faster to create and to switch.
+- A large **value** payload is the one case where the hand-written type saves memory (144 B per success) and is slightly faster to create. But its struct is as big as the payload, copied on each `TryGetValue`, so the switch is 5-10x slower. Create plus consume costs about 18.6 ns hand-written against about 10 ns keyword (plus 144 B of garbage). The keyword form still wins on CPU; the hand-written form wins only on garbage, and 144 B is cheap gen0 garbage.
+- Large value types inside a result are unusual anyway: results usually carry an id or a reference-type DTO.
+
 ## Verdict
 
 **Not clearly better. It is a trade, and the numbers favour it only for value-type payloads that are created often.**

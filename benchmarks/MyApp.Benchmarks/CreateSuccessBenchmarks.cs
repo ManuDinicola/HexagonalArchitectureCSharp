@@ -11,6 +11,8 @@ namespace MyApp.Benchmarks;
 [GenericTypeArguments(typeof(Point))]
 [GenericTypeArguments(typeof(string))]
 [GenericTypeArguments(typeof(Payload))]
+[GenericTypeArguments(typeof(BigStruct))]
+[GenericTypeArguments(typeof(BigDto))]
 [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory, BenchmarkLogicalGroupRule.ByParams)]
 [CategoriesColumn]
 public class CreateSuccessBenchmarks<T>
