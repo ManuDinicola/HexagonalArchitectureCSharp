@@ -83,7 +83,7 @@ The guardrails themselves were tested the hard way: each rule above was broken o
 ## Design decisions
 
 - **No MediatR / FluentAssertions** (licensing). A ~100-line mediator lives in `Application/Messaging`. Tests use xUnit + Shouldly (assertions) + FakeItEasy (fakes for outbound ports only; the pipeline itself is always real).
-- **Result instead of exceptions** for expected failures. `Result` and `Result<T>` are C# 15 unions (`Succeeded | Failed`, `T | Failed`): pattern match them (`result switch { Failed f => ..., T value => ... }`); `Unwrap()` throws on failure, so it is banned in `src` and left for tests. Do not use property patterns (`{ IsSuccess: true }`) on a result: on a union they apply to `Value`. The keyword form boxes a value-type success (`Result<Guid>`); a hand-written `[Union]` struct avoids that but made the switch 2-4x slower, so it was rejected (see [docs/benchmarks.md](docs/benchmarks.md)). Exceptions mean bugs and become a 500 ProblemDetails.
+- **Result instead of exceptions** for expected failures. `Result` and `Result<T>` are C# 15 unions (`Succeeded | Failed`, `T | Failed`): pattern match them (`result switch { Failed f => ..., T value => ... }`); `Unwrap()` throws on failure, so it is banned in `src` and left for tests. Do not use property patterns (`{ IsSuccess: true }`) on a result: on a union they apply to `Value`. Performance is measured, not assumed: see the next section. Exceptions mean bugs and become a 500 ProblemDetails.
 - **Optimistic concurrency** lives in Infrastructure, not in the Domain: every aggregate root has a shadow `Version` column (`UseConcurrencyToken()`) that `AppDbContext` stamps on each save, also when only an owned child (an order line) changed. Two writers holding the same version cannot both win; the loser gets a `Conflict` result. A test fails if a new aggregate forgets it.
 - **One port per aggregate.** No generic repository. Repositories only stage changes; a separate `IUnitOfWork` port commits them. `UnitOfWorkBehavior` (innermost pipeline step, commands only) calls it once per successful command, so a failed result never persists anything and a command touching several aggregates is atomic. A duplicate key or concurrent update surfaces as a `Conflict` result (HTTP 409), not an exception.
 - **Validation split.** The validator reports what is missing, per field (`Error.Target`, which becomes the key in the `ValidationProblem`). The Domain owns every business rule and limit (the same constants feed the EF mapping), so the database never rejects what the Domain accepted.
@@ -109,3 +109,17 @@ Or with bash/GNU sed:
 grep -rlI MyApp . --exclude-dir=.git --exclude-dir=bin --exclude-dir=obj | xargs sed -i 's/MyApp/Acme/g'
 find . -depth -name '*MyApp*' -not -path './.git/*' | while read -r p; do mv "$p" "$(dirname "$p")/$(basename "$p" | sed 's/MyApp/Acme/g')"; done
 ```
+
+## Result performance
+
+`Result` / `Result<T>` use the C# 15 `union` keyword. We benchmarked it (BenchmarkDotNet, Release, .NET 11 RC) against a hand-written `[Union]` struct with one typed field per case, which avoids boxing value-type successes. Only these two implementations were compared; third-party result libraries were not measured.
+
+| What the endpoint does | `union` keyword (used) | Hand-written `[Union]` |
+|---|---|---|
+| Switch on a success or failure (`result switch { ... }`) | **1.1 - 2.7 ns** | 2.4 - 11.5 ns (2-10x slower) |
+| Create a success with a reference payload (DTO, string) | **0 B, ~0.2 ns** | 0 B, ~2.2 ns |
+| Create a success with a small value payload (`Guid`, `int`) | 24-32 B, ~3.8 ns | **0 B, ~0.2 - 0.7 ns** |
+| Create a success with a 128-byte struct | 144 B, 8.9 ns | **0 B, 7.1 ns** |
+| Create a failure | **~5.5 ns** | ~7.3 ns |
+
+The keyword form is faster on the path every request takes (consuming the result) and for the usual reference-type payloads. The hand-written form only wins on allocations for value-type payloads, a few dozen bytes of short-lived garbage per request, which costs more in code to maintain than it saves. Method, machine and caveats (the runs are in-process): [docs/benchmarks.md](docs/benchmarks.md).
