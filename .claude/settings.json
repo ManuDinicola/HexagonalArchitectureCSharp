@@ -3,7 +3,6 @@
     "deny": [
       "Edit(/.editorconfig)",
       "Edit(/Directory.Build.props)",
-      "Edit(/Directory.Packages.props)",
       "Edit(/global.json)",
       "Edit(/src/Directory.Build.props)",
       "Edit(/tests/Directory.Build.props)",
