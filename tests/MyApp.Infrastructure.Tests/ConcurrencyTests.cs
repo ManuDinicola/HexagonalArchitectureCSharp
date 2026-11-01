@@ -65,6 +65,23 @@ public sealed class ConcurrencyTests : IDisposable
     }
 
     [Fact]
+    public async Task Two_writers_cancelling_the_same_order_cannot_both_win()
+    {
+        var id = await SeedOrderAsync();
+        await using var first = _database.NewContext();
+        await using var second = _database.NewContext();
+        var a = await LoadAsync(first, id);
+        var b = await LoadAsync(second, id);
+        a.Cancel(DateTimeOffset.UnixEpoch.AddHours(1)).IsSuccess.ShouldBeTrue();
+        b.Cancel(DateTimeOffset.UnixEpoch.AddHours(2)).IsSuccess.ShouldBeTrue();
+
+        (await new UnitOfWork(first).SaveChangesAsync(CancellationToken.None)).IsSuccess.ShouldBeTrue();
+        var result = await new UnitOfWork(second).SaveChangesAsync(CancellationToken.None);
+
+        result.Errors.ShouldHaveSingleItem().ShouldBe(PersistenceErrors.ConcurrencyConflict);
+    }
+
+    [Fact]
     public async Task Changing_only_a_line_still_changes_the_orders_version()
     {
         var id = await SeedOrderAsync();

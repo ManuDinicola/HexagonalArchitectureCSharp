@@ -1,3 +1,4 @@
+using MyApp.Application.Idempotency;
 using MyApp.Application.Messaging;
 using MyApp.Domain.Common;
 
@@ -13,6 +14,11 @@ internal sealed class PlaceOrderValidator : IValidator<PlaceOrderCommand>
         if (string.IsNullOrWhiteSpace(request.CustomerId))
         {
             errors.Add(Error.Validation("PlaceOrder.CustomerIdRequired", "CustomerId is required.", "customerId"));
+        }
+
+        if (IdempotencyKeys.Check(request.IdempotencyKey) is { } badKey)
+        {
+            errors.Add(badKey);
         }
 
         if (request.Lines is not { Count: > 0 })

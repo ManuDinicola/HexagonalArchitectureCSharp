@@ -23,7 +23,8 @@ internal static class ResultExtensions
             return Results.ValidationProblem(byField);
         }
 
-        // Mixed errors: a non-validation error is the more important one to report.
+        // Mixed errors: a non-validation error is the more important one and picks the status and title,
+        // but nothing is dropped: every error is listed under "errors".
         var first = errors.First(e => e.Type != ErrorType.Validation);
         var status = first.Type switch
         {
@@ -33,7 +34,11 @@ internal static class ResultExtensions
             ErrorType.Failure or _ => StatusCodes.Status500InternalServerError,
         };
 
-        return Results.Problem(statusCode: status, title: first.Code, detail: first.Message);
+        var all = errors.Select(e => new { e.Code, e.Message, e.Target }).ToArray();
+        return Results.Problem(
+            statusCode: status,
+            title: first.Code,
+            detail: first.Message,
+            extensions: new Dictionary<string, object?>(StringComparer.Ordinal) { ["errors"] = all });
     }
-
 }

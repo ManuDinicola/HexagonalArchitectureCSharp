@@ -10,7 +10,7 @@ tests/  Domain.Tests, Application.Tests, Infrastructure.Tests, Api.Tests (end to
 
 ## Requirements
 
-.NET 11 SDK (currently release candidate; `global.json` allows prerelease). The code uses C# 15 **union types**
+.NET 11 SDK (currently release candidate; `global.json` allows prerelease). EF tooling is a local tool: `dotnet tool restore`. The code uses C# 15 **union types**
 (`LangVersion=preview`) for `Result` / `Result<T>`.
 
 > **Preview toolchain.** The template targets a .NET 11 release candidate and C# 15 unions, so tooling (IDE, analyzers) may lag. Expect odd diagnostics around `Result`; the SDK may also change generated code (it once made `Program` public: it is now pinned `internal`). Move to the stable SDK when .NET 11 ships.
@@ -20,13 +20,15 @@ tests/  Domain.Tests, Application.Tests, Infrastructure.Tests, Api.Tests (end to
 ```bash
 dotnet build
 dotnet test
-dotnet run --project src/MyApp.Api      # SQLite file myapp.db is created on first start
+dotnet run --project src/MyApp.Api      # SQLite file myapp.db is created and migrated on first start
 ```
 
 ```bash
-curl -X POST localhost:5000/orders -H 'content-type: application/json' \
+curl -X POST localhost:5000/v1/orders -H 'content-type: application/json' -H 'idempotency-key: order-123' \
   -d '{"customerId":"c1","lines":[{"sku":"A","quantity":2,"unitPrice":4.5}]}'
-curl localhost:5000/orders/<id>
+curl localhost:5000/v1/orders/<id>
+curl localhost:5000/health/ready
+# API reference (Development): http://localhost:5000/scalar/v1   OpenAPI: /openapi/v1.json
 ```
 
 ## Add a use case
@@ -72,7 +74,11 @@ Every rule below is enforced by the compiler, an analyzer or a test: run `dotnet
 | Code smells, style, naming, missing braces, complexity | `AnalysisMode=All` + Roslynator, Meziantou, Sonar analyzers, tuned in `.editorconfig` |
 | Warnings (nullable, unused, ...) | `TreatWarningsAsErrors` |
 | Silencing a warning in production code (`#pragma warning disable`, `SuppressMessage`, `<NoWarn>`) | architecture tests (`SourceLayoutTests`) |
-| The HTTP contract breaking (status codes, ProblemDetails, field keys) | `Api.Tests`: the real app, real pipeline, real SQLite |
+| The EF model changing without a migration (the schema comes from migrations) | `MigrationTests` (`HasPendingModelChanges`) |
+| Two instances publishing the same outbox message or out of order, a lease that two instances hold, retention deleting undelivered messages | `LeaderLeaseTests`, `MultiInstanceTests`, `RetentionPurgerTests` |
+| An event saved without its aggregate, or an aggregate saved without its event (outbox atomicity); events delivered out of order or never retried | `OutboxTests`, `OutboxProcessorTests`, `OutboxRelayTests` |
+| The pipeline order changing, or an idempotent command losing its idempotency step | `PipelineOrderTests` |
+| The HTTP contract breaking (status codes, ProblemDetails, field keys, versioned routes, OpenAPI document, health probes) | `Api.Tests`: the real app, real pipeline, real SQLite |
 
 Note on the two layers: the Roslyn banned-API analyzer flags *uses* (calls, `new`, `typeof`) with a precise
 message while you type. It does not flag bare declarations such as a constructor parameter. The NetArchTest rules cover
@@ -89,7 +95,14 @@ The guardrails themselves were tested the hard way: each rule above was broken o
 - **Validation split.** The validator reports what is missing, per field (`Error.Target`, which becomes the key in the `ValidationProblem`). The Domain owns every business rule and limit (the same constants feed the EF mapping), so the database never rejects what the Domain accepted.
 - **Ids.** The Domain never generates ids or reads the clock; Application creates them with `Guid.CreateVersion7(time.GetUtcNow())`, so they are time-ordered and testable with a fake clock.
 - **Time.** `TimeProvider` is registered by `AddApplication()` (`TryAdd`, so a host or a test can register its own first).
-- **SQLite + `EnsureCreated`** to keep the template runnable. It does not evolve an existing database (an old `myapp.db` lacks newer columns: delete it). Switch to EF migrations when your model starts to change.
+- **SQLite + EF migrations.** The schema comes from migrations (`Infrastructure/Persistence/Migrations`), applied at startup by default (`Database:MigrateOnStartup`; set it to `false` and run the migrations as a deploy step when you have several instances). A database created by an older `EnsureCreated` version has no migration history: delete `myapp.db`. A test fails if the model changes without a migration. How to add one: [ARCHITECTURE.md](ARCHITECTURE.md#migrations).
+- **URL versioning.** Everything is under `/v1`. A breaking change adds `/v2` next to it; additive changes stay in v1. The OpenAPI document is per version (`/openapi/v1.json`), with a Scalar reference at `/scalar/v1`. Both are served in Development only.
+- **Idempotency.** `POST /v1/orders` accepts an `Idempotency-Key` header. The first success is recorded in the same transaction as the order; a retry with the same key and body gets the same answer and creates nothing; the same key with another body is a 409. A command opts in by implementing `IIdempotentCommand<T>`.
+- **Outbox.** Aggregates raise domain events (`OrderPlaced`, `OrderCancelled`). The unit of work saves them to an `OutboxMessages` table in the same transaction as the change, and a background relay publishes them in order through the `IMessagePublisher` port: at least once, with retries and dead-lettering. The default adapter only logs; plug your broker in there. Details and the consumer's duty to ignore duplicates (`MessageId`): [ARCHITECTURE.md](ARCHITECTURE.md#domain-events-and-the-outbox).
+- **Retention.** Idempotency records and delivered outbox messages are purged after `Retention:Days` (default 7; keep it longer than your clients' retry window). Undelivered and dead-lettered messages are never purged. [ARCHITECTURE.md](ARCHITECTURE.md#retention).
+- **Several instances.** The relay and the purge are safe on every instance: they take turns through a lease row in the database, so one publisher keeps the global message order and a dead one is replaced within about 30 seconds. Set `Database:MigrateOnStartup=false` and migrate as a deploy step. [ARCHITECTURE.md](ARCHITECTURE.md#running-several-instances).
+- **Health.** `/health/live` has no checks (the process answers); `/health/ready` runs the checks tagged `ready` (the database). Use live for restarts and ready for load balancing.
+- **Observability.** OpenTelemetry: ASP.NET Core requests, one span per use case (`ActivitySource` `MyApp.Application`), the counter `myapp.requests` and the histogram `myapp.request.duration` (tagged by request and outcome), and logs with the trace id. Nothing is exported until you set `OTEL_EXPORTER_OTLP_ENDPOINT`. Error responses carry `traceId`.
 
 ## Renaming `MyApp`
 

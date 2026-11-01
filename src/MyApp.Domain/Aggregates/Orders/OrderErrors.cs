@@ -31,4 +31,7 @@ public static class OrderErrors
 
     public static Error NotFound(Guid id) =>
         Error.NotFound("Order.NotFound", $"Order '{id}' was not found.");
+
+    public static Error AlreadyCancelled(Guid id) =>
+        Error.Conflict("Order.AlreadyCancelled", $"Order '{id}' is already cancelled.");
 }

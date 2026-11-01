@@ -14,7 +14,10 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.UseConcurrencyToken();
         builder.Property(o => o.CustomerId).HasMaxLength(Order.CustomerIdMaxLength).IsRequired();
         builder.Property(o => o.PlacedAt);
-        builder.Ignore(o => o.Total);
+        builder.Property(o => o.Total).HasPrecision(18, OrderLine.UnitPriceScale);
+        builder.Property(o => o.Status).HasConversion<string>().HasMaxLength(20);
+        builder.Property(o => o.CancelledAt);
+        builder.Ignore(o => o.DomainEvents); // raised events are not state: the outbox stores them
 
         builder.OwnsMany(o => o.Lines, lines =>
         {

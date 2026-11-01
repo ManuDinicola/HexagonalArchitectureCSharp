@@ -37,6 +37,31 @@ public sealed class OrderRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task A_cancelled_order_keeps_its_status_time_and_total_after_a_reload()
+    {
+        var order = NewOrder(DateTimeOffset.UnixEpoch);
+        await using (var write = _database.NewContext())
+        {
+            new OrderRepository(write).Add(order);
+            await new UnitOfWork(write).SaveChangesAsync(CancellationToken.None);
+        }
+
+        var cancelledAt = DateTimeOffset.UnixEpoch.AddDays(1);
+        await using (var change = _database.NewContext())
+        {
+            var tracked = (await new OrderRepository(change).GetByIdAsync(order.Id, CancellationToken.None)).ShouldNotBeNull();
+            tracked.Cancel(cancelledAt).IsSuccess.ShouldBeTrue();
+            (await new UnitOfWork(change).SaveChangesAsync(CancellationToken.None)).IsSuccess.ShouldBeTrue();
+        }
+
+        await using var read = _database.NewContext();
+        var loaded = (await new OrderRepository(read).GetByIdReadOnlyAsync(order.Id, CancellationToken.None)).ShouldNotBeNull();
+        loaded.Status.ShouldBe(OrderStatus.Cancelled);
+        loaded.CancelledAt.ShouldBe(cancelledAt);
+        loaded.Total.ShouldBe(24m);
+    }
+
+    [Fact]
     public async Task Tracked_read_returns_the_order_for_commands_that_change_it()
     {
         var order = NewOrder(DateTimeOffset.UnixEpoch);
@@ -82,7 +107,7 @@ public sealed class OrderRepositoryTests : IDisposable
     [Fact]
     public async Task AddInfrastructure_wires_every_port()
     {
-        var services = new ServiceCollection().AddInfrastructure("DataSource=:memory:");
+        var services = new ServiceCollection().AddLogging().AddInfrastructure("DataSource=:memory:");
         await using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
         await using var scope = provider.CreateAsyncScope();
 

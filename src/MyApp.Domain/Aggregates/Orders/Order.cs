@@ -2,12 +2,13 @@ using MyApp.Domain.Common;
 
 namespace MyApp.Domain.Aggregates.Orders;
 
-public sealed class Order
+public sealed class Order : IHasDomainEvents
 {
     public const int CustomerIdMaxLength = 100;
 
     private readonly List<OrderLine> _lines = [];
     private IReadOnlyList<OrderLine>? _linesView;
+    private readonly List<IDomainEvent> _domainEvents = [];
 
     private Order() { } // EF Core
 
@@ -17,13 +18,19 @@ public sealed class Order
         CustomerId = customerId;
         PlacedAt = placedAt;
         _lines.AddRange(lines);
+        Total = _lines.Sum(l => l.Total); // the one place the total is computed; it is stored, so readers never recompute it
     }
 
     public Guid Id { get; private set; }
     public string CustomerId { get; private set; } = null!;
     public DateTimeOffset PlacedAt { get; private set; }
     public IReadOnlyList<OrderLine> Lines => _linesView ??= _lines.AsReadOnly();
-    public decimal Total => _lines.Sum(l => l.Total);
+    public decimal Total { get; private set; }
+    public OrderStatus Status { get; private set; } = OrderStatus.Placed;
+    public DateTimeOffset? CancelledAt { get; private set; }
+    public IReadOnlyList<IDomainEvent> DomainEvents => _domainEvents;
+
+    public void ClearDomainEvents() => _domainEvents.Clear();
 
     /// <summary>
     /// The only way to create an order, so invariants cannot be skipped. Reports every broken rule at once;
@@ -72,6 +79,22 @@ public sealed class Order
             return Result.Failure<Order>(errors);
         }
 
-        return new Order(id, customerId.Trim(), placedAt, created);
+        var order = new Order(id, customerId.Trim(), placedAt, created);
+        order._domainEvents.Add(new OrderPlaced(order.Id, order.CustomerId, order.Total, created.Count, placedAt));
+        return order;
+    }
+
+    /// <summary>A placed order can be cancelled once. Cancelling again is a conflict, not a bug. The time comes from the caller.</summary>
+    public Result Cancel(DateTimeOffset cancelledAt)
+    {
+        if (Status == OrderStatus.Cancelled)
+        {
+            return OrderErrors.AlreadyCancelled(Id);
+        }
+
+        Status = OrderStatus.Cancelled;
+        CancelledAt = cancelledAt;
+        _domainEvents.Add(new OrderCancelled(Id, cancelledAt));
+        return Result.Success();
     }
 }

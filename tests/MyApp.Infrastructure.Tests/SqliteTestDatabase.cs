@@ -20,5 +20,9 @@ internal sealed class SqliteTestDatabase : IDisposable
     public AppDbContext NewContext() =>
         new(new DbContextOptionsBuilder<AppDbContext>().UseSqlite(_connection).Options, TimeProvider.System);
 
+    /// <summary>A fresh context that reads the given clock (for versions, outbox times and retention).</summary>
+    public AppDbContext NewContext(TimeProvider time) =>
+        new(new DbContextOptionsBuilder<AppDbContext>().UseSqlite(_connection).Options, time);
+
     public void Dispose() => _connection.Dispose();
 }

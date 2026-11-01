@@ -90,6 +90,79 @@ public class OrderTests
     }
 
     [Fact]
+    public void A_new_order_is_placed_and_its_total_is_stored_not_recomputed()
+    {
+        var order = Place("cust-1", Line(qty: 2, price: 5m), Line("SKU-2", 1, 3m)).Unwrap();
+
+        order.Status.ShouldBe(OrderStatus.Placed);
+        order.CancelledAt.ShouldBeNull();
+        order.Total.ShouldBe(13m);
+    }
+
+    [Fact]
+    public void Cancel_marks_the_order_cancelled_at_the_given_time_and_keeps_the_total()
+    {
+        var order = Place("cust-1", Line(qty: 2, price: 5m)).Unwrap();
+        var later = Now.AddHours(1);
+
+        var result = order.Cancel(later);
+
+        result.IsSuccess.ShouldBeTrue();
+        order.Status.ShouldBe(OrderStatus.Cancelled);
+        order.CancelledAt.ShouldBe(later);
+        order.Total.ShouldBe(10m);
+    }
+
+    [Fact]
+    public void Cancel_twice_is_a_conflict_and_keeps_the_first_time()
+    {
+        var order = Place("cust-1", Line()).Unwrap();
+        order.Cancel(Now.AddHours(1));
+
+        var result = order.Cancel(Now.AddHours(2));
+
+        var error = result.Errors.ShouldHaveSingleItem();
+        error.ShouldBe(OrderErrors.AlreadyCancelled(Id));
+        error.Type.ShouldBe(ErrorType.Conflict);
+        order.CancelledAt.ShouldBe(Now.AddHours(1));
+    }
+
+    [Fact]
+    public void Placing_an_order_raises_OrderPlaced_with_what_consumers_need()
+    {
+        var order = Place("cust-1", Line(qty: 2, price: 5m), Line("SKU-2", 1, 3m)).Unwrap();
+
+        var placed = order.DomainEvents.ShouldHaveSingleItem().ShouldBeOfType<OrderPlaced>();
+        placed.OrderId.ShouldBe(Id);
+        placed.CustomerId.ShouldBe("cust-1");
+        placed.Total.ShouldBe(13m);
+        placed.LineCount.ShouldBe(2);
+        placed.OccurredAt.ShouldBe(Now);
+        placed.Type.ShouldBe("order.placed.v1");
+    }
+
+    [Fact]
+    public void Cancelling_raises_OrderCancelled_after_OrderPlaced_and_a_refused_cancel_raises_nothing()
+    {
+        var order = Place("cust-1", Line()).Unwrap();
+        order.Cancel(Now.AddHours(1));
+        order.Cancel(Now.AddHours(2)); // refused: already cancelled
+
+        order.DomainEvents.Select(e => e.Type).ShouldBe(["order.placed.v1", "order.cancelled.v1"]);
+        order.DomainEvents[1].ShouldBeOfType<OrderCancelled>().OccurredAt.ShouldBe(Now.AddHours(1));
+    }
+
+    [Fact]
+    public void Clearing_the_events_empties_the_list()
+    {
+        var order = Place("cust-1", Line()).Unwrap();
+
+        order.ClearDomainEvents();
+
+        order.DomainEvents.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Lines_cannot_be_modified_from_outside()
     {
         var order = Place("cust-1", Line()).Unwrap();

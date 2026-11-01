@@ -20,6 +20,7 @@ internal sealed class GetOrderHandler(IOrderRepository orders) : IRequestHandler
             order.CustomerId,
             order.PlacedAt,
             order.Total,
+            order.Status.ToString(),
             [.. order.Lines.Select(l => new OrderLineDto(l.Sku, l.Quantity, l.UnitPrice))]);
     }
 }

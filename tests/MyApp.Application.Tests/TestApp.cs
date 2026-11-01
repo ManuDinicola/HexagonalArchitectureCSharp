@@ -23,18 +23,23 @@ public sealed class TestApp : IAsyncDisposable
             .ReturnsLazily(() =>
             {
                 Saved.AddRange(Staged);
+                Idempotency.Commit();
                 Staged.Clear();
                 return Task.FromResult(Result.Success());
             });
+        A.CallTo(() => Orders.GetByIdAsync(A<Guid>._, A<CancellationToken>._))
+            .ReturnsLazily((Guid id, CancellationToken _) => Task.FromResult(Saved.FirstOrDefault(o => o.Id == id)));
         A.CallTo(() => Orders.GetByIdReadOnlyAsync(A<Guid>._, A<CancellationToken>._))
             .ReturnsLazily((Guid id, CancellationToken _) => Task.FromResult(Saved.FirstOrDefault(o => o.Id == id)));
         A.CallTo(() => Time.GetUtcNow()).Returns(Now);
+        A.CallTo(() => Time.TimestampFrequency).Returns(TimeSpan.TicksPerSecond); // the telemetry behavior measures durations
 
         var services = new ServiceCollection();
         services.AddLogging(b => b.SetMinimumLevel(LogLevel.Trace).AddProvider(Logs));
         services.AddApplication();
         services.AddSingleton(Orders);
         services.AddSingleton(UnitOfWork);
+        services.AddSingleton<IIdempotencyStore>(Idempotency);
         services.AddSingleton(ReadStore);
         services.AddSingleton(Time);
         _provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
@@ -46,6 +51,7 @@ public sealed class TestApp : IAsyncDisposable
     public IOrderRepository Orders { get; } = A.Fake<IOrderRepository>();
     public IUnitOfWork UnitOfWork { get; } = A.Fake<IUnitOfWork>();
     public IOrderReadStore ReadStore { get; } = A.Fake<IOrderReadStore>();
+    public InMemoryIdempotencyStore Idempotency { get; } = new();
     public TimeProvider Time { get; } = A.Fake<TimeProvider>();
     public List<Order> Staged { get; } = [];
     public List<Order> Saved { get; } = [];
@@ -55,6 +61,15 @@ public sealed class TestApp : IAsyncDisposable
     {
         await using var scope = _provider.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<IDispatcher>().SendAsync(request);
+    }
+
+    /// <summary>Names of the pipeline behaviors a request goes through, outermost first.</summary>
+    public IReadOnlyList<string> PipelineOf<TRequest, TResponse>()
+        where TRequest : IRequest<TResponse>
+        where TResponse : IResult<TResponse>
+    {
+        using var scope = _provider.CreateScope();
+        return [.. scope.ServiceProvider.GetServices<IPipelineBehavior<TRequest, TResponse>>().Select(b => b.GetType().Name)];
     }
 
     public ValueTask DisposeAsync() => _provider.DisposeAsync();

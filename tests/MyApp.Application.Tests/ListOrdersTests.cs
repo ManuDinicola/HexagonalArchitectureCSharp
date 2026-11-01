@@ -15,7 +15,7 @@ public class ListOrdersTests : IAsyncLifetime
     [Fact]
     public async Task Second_page_asks_the_read_store_to_skip_the_first_page()
     {
-        var row = new OrderSummary(Guid.CreateVersion7(TestApp.Now), "cust-1", TestApp.Now, 9m, 1);
+        var row = new OrderSummary(Guid.CreateVersion7(TestApp.Now), "cust-1", TestApp.Now, 9m, 1, "Placed");
         A.CallTo(() => _app.ReadStore.ListNewestFirstAsync(10, 10, A<CancellationToken>._))
             .Returns(Task.FromResult<IReadOnlyList<OrderSummary>>([row]));
 

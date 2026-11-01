@@ -36,6 +36,7 @@ public sealed class OrderReadStoreTests : IDisposable
         rows.Select(r => r.Id).ShouldBe([newest.Id, oldest.Id]);
         rows[1].Total.ShouldBe(oldest.Total);
         rows[1].LineCount.ShouldBe(2);
+        rows[1].Status.ShouldBe("Placed");
         db.ChangeTracker.Entries().ShouldBeEmpty();
     }
 
