@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Compares the keyword-based Result (frozen copy in KeywordUnion/, commit c6994c6, what src uses) with the hand-written [Union] alternative (HandwrittenUnion/, commit a5a8e3d). Self-contained: references no product project. Not part of the product. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+</Project>
