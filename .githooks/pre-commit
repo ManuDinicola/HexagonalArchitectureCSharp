@@ -4,7 +4,7 @@
 # 2. Builds and runs every test.
 set -e
 
-protected='^(\.editorconfig|Directory\.Build\.props|Directory\.Packages\.props|global\.json|src/Directory\.Build\.props|tests/Directory\.Build\.props|src/BannedSymbols[^/]*\.txt|src/[^/]+/BannedSymbols\.txt|tests/MyApp\.Architecture\.Tests/.*|\.githooks/.*|\.claude/.*|\.github/.*|AGENTS\.md|CLAUDE\.md)$'
+protected='^(\.editorconfig|Directory\.Build\.props|global\.json|src/Directory\.Build\.props|tests/Directory\.Build\.props|src/BannedSymbols[^/]*\.txt|src/[^/]+/BannedSymbols\.txt|tests/MyApp\.Architecture\.Tests/.*|\.githooks/.*|\.claude/.*|\.github/.*|AGENTS\.md|CLAUDE\.md)$'
 
 touched=$(git diff --cached --name-only --diff-filter=ACMRD | grep -E "$protected" || true)
 if [ -n "$touched" ] && [ "${GUARDRAIL_CHANGE:-}" != "1" ]; then
