@@ -49,7 +49,7 @@ sh scripts/setup.sh   # once per clone: enables the hook (core.hooksPath), check
 
 ## Coverage and mutation testing
 
-Neither runs in the gate. `sh scripts/coverage.sh` collects coverage (Cobertura XML in `TestResults/`); `sh scripts/mutation.sh` runs Stryker on the Domain with its tests (thresholds in `stryker-config.json`). Run mutation after changing a business rule.
+Neither runs in the gate. `sh scripts/coverage.sh` collects coverage (Cobertura XML in `TestResults/`); `sh scripts/mutation.sh` runs Stryker on the Domain with its tests (thresholds in `stryker-config.json`). Run mutation after changing a business rule. Known issue: on the .NET 11 rc3 SDK, Stryker 4.8.1 exits silently without running (no output, exit code 1), so `mutation.sh` does not work yet; try a newer Stryker when one supports .NET 11. `coverage.sh` skips `MyApp.Architecture.Tests` because coverlet's injected tracker type trips the dependency rules.
 
 ## What fails the build
 
