@@ -38,7 +38,7 @@ internal sealed class IdempotencyBehavior<TRequest, TValue>(IIdempotencyStore st
         }
 
         var response = await next();
-        if (response.Value is TValue value)
+        if (response is TValue value)
         {
             store.Add(new IdempotencyRecord(scope, key, fingerprint, JsonSerializer.Serialize(value), time.GetUtcNow()));
         }
