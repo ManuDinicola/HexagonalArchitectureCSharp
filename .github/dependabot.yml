@@ -1,0 +1,20 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      dotnet-runtime:
+        patterns: ["Microsoft.EntityFrameworkCore*", "Microsoft.Extensions.*", "Microsoft.AspNetCore.*"]
+      opentelemetry:
+        patterns: ["OpenTelemetry*"]
+      analyzers:
+        patterns: ["Roslynator*", "Meziantou*", "SonarAnalyzer*", "Microsoft.CodeAnalysis*"]
+      testing:
+        patterns: ["xunit*", "Shouldly", "FakeItEasy", "TngTech*", "coverlet*", "Microsoft.NET.Test.Sdk"]
+    open-pull-requests-limit: 5
+  - package-ecosystem: dotnet-sdk
+    directory: /
+    schedule:
+      interval: weekly
