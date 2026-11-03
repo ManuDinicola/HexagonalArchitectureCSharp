@@ -42,10 +42,14 @@ Then add an endpoint in `MyApp.Api/Endpoints`. Read [ARCHITECTURE.md](ARCHITECTU
 ## Local gate (no CI)
 
 ```bash
-git config core.hooksPath .githooks   # once per clone
+sh scripts/setup.sh   # once per clone: enables the hook (core.hooksPath), checks the SDK, restores tools
 ```
 
 `.githooks/pre-commit` builds, runs every test, and refuses a commit that stages a guardrail file (`.editorconfig`, `Directory.Build.props`, `BannedSymbols*.txt`, `tests/MyApp.Architecture.Tests`, `AGENTS.md`, ...) unless a human sets `GUARDRAIL_CHANGE=1`. `.claude/settings.json` additionally denies Claude Code edits to those files.
+
+## Coverage and mutation testing
+
+Neither runs in the gate. `sh scripts/coverage.sh` collects coverage (Cobertura XML in `TestResults/`); `sh scripts/mutation.sh` runs Stryker on the Domain with its tests (thresholds in `stryker-config.json`). Run mutation after changing a business rule. Stryker 5.0.0 works on the .NET 11 rc3 SDK (4.8.1 exits silently): last run, 119 mutants created, 87 tested, score 100%, about 9 minutes. It logs "test coverage capture failed" and then tests every mutant against every test, which is why it is slow. `coverage.sh` skips `MyApp.Architecture.Tests` because coverlet's injected tracker type trips the dependency rules.
 
 ## What fails the build
 
