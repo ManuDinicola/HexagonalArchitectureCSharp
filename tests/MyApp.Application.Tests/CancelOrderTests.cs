@@ -6,12 +6,11 @@ using MyApp.Domain.Common;
 
 namespace MyApp.Application.Tests;
 
-public sealed class CancelOrderTests : IAsyncLifetime
+public sealed class CancelOrderTests : IAsyncDisposable
 {
     private readonly TestApp _app = new();
 
-    public Task InitializeAsync() => Task.CompletedTask;
-    public async Task DisposeAsync() => await _app.DisposeAsync();
+    public ValueTask DisposeAsync() => _app.DisposeAsync();
 
     private async Task<Guid> PlaceAsync() =>
         (await _app.SendAsync(new PlaceOrderCommand("cust-1", [new PlaceOrderLine("SKU-1", 1, 5m)]))).Unwrap();

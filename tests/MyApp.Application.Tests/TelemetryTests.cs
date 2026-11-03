@@ -6,12 +6,11 @@ using MyApp.Application.UseCases.PlaceOrder;
 namespace MyApp.Application.Tests;
 
 /// <summary>Listens like OpenTelemetry would. The source and meter are process-wide, so each test looks only at its own request type.</summary>
-public sealed class TelemetryTests : IAsyncLifetime
+public sealed class TelemetryTests : IAsyncDisposable
 {
     private readonly TestApp _app = new();
 
-    public Task InitializeAsync() => Task.CompletedTask;
-    public async Task DisposeAsync() => await _app.DisposeAsync();
+    public ValueTask DisposeAsync() => _app.DisposeAsync();
 
     private static ActivityListener ListenToSpans(List<Activity> stopped)
     {

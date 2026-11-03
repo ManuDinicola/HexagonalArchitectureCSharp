@@ -5,12 +5,11 @@ using MyApp.Domain.Common;
 
 namespace MyApp.Application.Tests;
 
-public class ListOrdersTests : IAsyncLifetime
+public sealed class ListOrdersTests : IAsyncDisposable
 {
     private readonly TestApp _app = new();
 
-    public Task InitializeAsync() => Task.CompletedTask;
-    public async Task DisposeAsync() => await _app.DisposeAsync();
+    public ValueTask DisposeAsync() => _app.DisposeAsync();
 
     [Fact]
     public async Task Second_page_asks_the_read_store_to_skip_the_first_page()

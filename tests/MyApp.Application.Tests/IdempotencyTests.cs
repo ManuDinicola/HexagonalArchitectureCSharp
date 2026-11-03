@@ -6,12 +6,11 @@ using MyApp.Domain.Common;
 
 namespace MyApp.Application.Tests;
 
-public sealed class IdempotencyTests : IAsyncLifetime
+public sealed class IdempotencyTests : IAsyncDisposable
 {
     private readonly TestApp _app = new();
 
-    public Task InitializeAsync() => Task.CompletedTask;
-    public async Task DisposeAsync() => await _app.DisposeAsync();
+    public ValueTask DisposeAsync() => _app.DisposeAsync();
 
     private static PlaceOrderCommand Command(string? key, int quantity = 2) =>
         new("cust-1", [new PlaceOrderLine("SKU-1", quantity, 10m)], key);

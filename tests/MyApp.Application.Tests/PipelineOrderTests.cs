@@ -6,12 +6,11 @@ using MyApp.Domain.Common;
 namespace MyApp.Application.Tests;
 
 /// <summary>The order of the behaviors is the registration order in AddApplication(). Pin it: reordering changes what the pipeline guarantees.</summary>
-public sealed class PipelineOrderTests : IAsyncLifetime
+public sealed class PipelineOrderTests : IAsyncDisposable
 {
     private readonly TestApp _app = new();
 
-    public Task InitializeAsync() => Task.CompletedTask;
-    public async Task DisposeAsync() => await _app.DisposeAsync();
+    public ValueTask DisposeAsync() => _app.DisposeAsync();
 
     [Fact]
     public void A_command_is_traced_logged_validated_saved_and_made_idempotent_innermost()

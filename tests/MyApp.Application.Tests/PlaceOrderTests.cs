@@ -6,12 +6,11 @@ using MyApp.Domain.Aggregates.Orders;
 
 namespace MyApp.Application.Tests;
 
-public class PlaceOrderTests : IAsyncLifetime
+public sealed class PlaceOrderTests : IAsyncDisposable
 {
     private readonly TestApp _app = new();
 
-    public Task InitializeAsync() => Task.CompletedTask;
-    public async Task DisposeAsync() => await _app.DisposeAsync();
+    public ValueTask DisposeAsync() => _app.DisposeAsync();
 
     private static PlaceOrderCommand ValidCommand() =>
         new("cust-1", [new PlaceOrderLine("SKU-1", 2, 10m), new PlaceOrderLine("SKU-2", 1, 5m)]);

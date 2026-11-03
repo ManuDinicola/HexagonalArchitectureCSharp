@@ -1,15 +1,14 @@
 using System.Reflection;
+using ArchUnitNET.Fluent;
+using ArchUnitNET.xUnitV3;
 using Microsoft.EntityFrameworkCore;
 using MyApp.Application.Messaging;
-using NetArchTest.Rules;
+using static ArchUnitNET.Fluent.ArchRuleDefinition;
 
 namespace MyApp.Architecture.Tests;
 
 public class DesignRulesTests
 {
-    private static void AssertNoViolations(TestResult result) =>
-        result.IsSuccessful.ShouldBeTrue("Violating types: " + string.Join(", ", result.FailingTypeNames ?? []));
-
     [Fact]
     public void Everything_in_Infrastructure_is_internal_except_AddInfrastructure()
     {
@@ -27,31 +26,38 @@ public class DesignRulesTests
     [Fact]
     public void Pipeline_internals_are_not_public()
     {
-        AssertNoViolations(Types.InAssembly(Layers.ApplicationAssembly)
-            .That().ResideInNamespace(Layers.Behaviors).Or().HaveName("Dispatcher")
-            .Should().NotBePublic().GetResult());
+        Types().That().ResideInAssembly(Layers.ApplicationAssembly)
+            .And().ResideInNamespaceMatching(Layers.NamespaceOrBelow(Layers.Behaviors))
+            .Should().NotBePublic().Check(Layers.Arch);
+        Types().That().ResideInAssembly(Layers.ApplicationAssembly).And().HaveName("Dispatcher")
+            .Should().NotBePublic().Check(Layers.Arch);
     }
 
     [Fact]
     public void Persistence_types_are_not_public()
     {
-        AssertNoViolations(Types.InAssembly(Layers.InfrastructureAssembly)
-            .That().ResideInNamespace("MyApp.Infrastructure.Persistence")
-            .Should().NotBePublic().GetResult());
-        AssertNoViolations(Types.InAssembly(Layers.InfrastructureAssembly)
-            .That().Inherit(typeof(DbContext)).Or().ImplementInterface(typeof(IEntityTypeConfiguration<>))
-            .Should().NotBePublic().GetResult());
+        Types().That().ResideInAssembly(Layers.InfrastructureAssembly)
+            .And().ResideInNamespaceMatching(Layers.NamespaceOrBelow(Layers.InfrastructurePersistence))
+            .Should().NotBePublic().Check(Layers.Arch);
+        Types().That().ResideInAssembly(Layers.InfrastructureAssembly)
+            .And().AreAssignableTo(typeof(DbContext))
+            .Should().NotBePublic().Check(Layers.Arch);
+        Types().That().ResideInAssembly(Layers.InfrastructureAssembly)
+            .And().ImplementInterface(typeof(IEntityTypeConfiguration<>))
+            .Should().NotBePublic().Check(Layers.Arch);
     }
 
     [Fact]
     public void Ports_are_interfaces_that_only_know_the_domain()
     {
-        var ports = Types.InAssembly(Layers.ApplicationAssembly).That().ResideInNamespace(Layers.PortsOut);
+        var ports = Types().That().ResideInAssembly(Layers.ApplicationAssembly)
+            .And().ResideInNamespaceMatching(Layers.NamespaceOrBelow(Layers.PortsOut));
 
-        AssertNoViolations(ports.Should().BeInterfaces().GetResult());
-        AssertNoViolations(ports.ShouldNot()
-            .HaveDependencyOnAny(Layers.UseCases, Layers.Messaging, Layers.Behaviors,
-                "Microsoft.EntityFrameworkCore", "Microsoft.AspNetCore", "Microsoft.Extensions").GetResult());
+        ports.Should().Be(Interfaces()).Check(Layers.Arch);
+        ports.Should().NotDependOnAnyTypesThat()
+            .ResideInNamespaceMatching(Layers.NamespaceOrBelow(Layers.UseCases, Layers.Messaging, Layers.Behaviors,
+                "Microsoft.EntityFrameworkCore", "Microsoft.AspNetCore", "Microsoft.Extensions"))
+            .Check(Layers.Arch);
     }
 
     [Fact]
@@ -105,19 +111,20 @@ public class DesignRulesTests
     [Fact]
     public void Handlers_and_validators_are_internal_and_live_in_UseCases()
     {
-        var types = Types.InAssembly(Layers.ApplicationAssembly)
-            .That().ImplementInterface(typeof(IRequestHandler<,>)).Or().ImplementInterface(typeof(IValidator<>));
+        var types = Types().That().ResideInAssembly(Layers.ApplicationAssembly)
+            .And().ImplementInterface(typeof(IRequestHandler<,>)).Or().ImplementInterface(typeof(IValidator<>));
 
-        AssertNoViolations(types.Should().NotBePublic().GetResult());
-        AssertNoViolations(types.Should().ResideInNamespaceStartingWith(Layers.UseCases).GetResult());
+        types.Should().NotBePublic().Check(Layers.Arch);
+        types.Should().ResideInNamespaceMatching(Layers.NamespaceOrBelow(Layers.UseCases)).Check(Layers.Arch);
     }
 
     [Fact]
     public void Use_cases_never_commit_themselves_the_pipeline_does()
     {
-        AssertNoViolations(Types.InAssembly(Layers.ApplicationAssembly)
-            .That().ResideInNamespaceStartingWith(Layers.UseCases)
-            .ShouldNot().HaveDependencyOn(typeof(MyApp.Application.Ports.Out.IUnitOfWork).FullName!).GetResult());
+        Types().That().ResideInAssembly(Layers.ApplicationAssembly)
+            .And().ResideInNamespaceMatching(Layers.NamespaceOrBelow(Layers.UseCases))
+            .Should().NotDependOnAny(typeof(MyApp.Application.Ports.Out.IUnitOfWork))
+            .Check(Layers.Arch);
     }
 
     [Fact]
