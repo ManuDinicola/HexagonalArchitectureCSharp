@@ -81,14 +81,14 @@ Every rule below is enforced by the compiler, an analyzer or a test: run `dotnet
 | The HTTP contract breaking (status codes, ProblemDetails, field keys, versioned routes, OpenAPI document, health probes) | `Api.Tests`: the real app, real pipeline, real SQLite |
 
 Note on the two layers: the Roslyn banned-API analyzer flags *uses* (calls, `new`, `typeof`) with a precise
-message while you type. It does not flag bare declarations such as a constructor parameter. The NetArchTest rules cover
+message while you type. It does not flag bare declarations such as a constructor parameter. The ArchUnitNET rules cover
 that gap. Both work on namespaces, so new ports, entities and use cases are covered automatically.
 
 The guardrails themselves were tested the hard way: each rule above was broken on purpose (a banned call, a forbidden reference, a public setter, a missing token, ...) and the build or the tests had to fail. That exercise found a hole (the blocking-call bans only matched one overload), which is why the list is explicit.
 
 ## Design decisions
 
-- **No MediatR / FluentAssertions** (licensing). A ~100-line mediator lives in `Application/Messaging`. Tests use xUnit + Shouldly (assertions) + FakeItEasy (fakes for outbound ports only; the pipeline itself is always real).
+- **No MediatR / FluentAssertions** (licensing). A ~100-line mediator lives in `Application/Messaging`. Tests use xUnit v3 + Shouldly (assertions) + FakeItEasy (fakes for outbound ports only; the pipeline itself is always real).
 - **Result instead of exceptions** for expected failures. `Result` and `Result<T>` are C# 15 unions (`Succeeded | Failed`, `T | Failed`): pattern match them (`result switch { Failed f => ..., T value => ... }`); `Unwrap()` throws on failure, so it is banned in `src` and left for tests. Do not use property patterns (`{ IsSuccess: true }`) on a result: on a union they apply to `Value`. Performance is measured, not assumed: see the next section. Exceptions mean bugs and become a 500 ProblemDetails.
 - **Optimistic concurrency** lives in Infrastructure, not in the Domain: every aggregate root has a shadow `Version` column (`UseConcurrencyToken()`) that `AppDbContext` stamps on each save, also when only an owned child (an order line) changed. Two writers holding the same version cannot both win; the loser gets a `Conflict` result. A test fails if a new aggregate forgets it.
 - **One port per aggregate.** No generic repository. Repositories only stage changes; a separate `IUnitOfWork` port commits them. `UnitOfWorkBehavior` (innermost pipeline step, commands only) calls it once per successful command, so a failed result never persists anything and a command touching several aggregates is atomic. A duplicate key or concurrent update surfaces as a `Conflict` result (HTTP 409), not an exception.

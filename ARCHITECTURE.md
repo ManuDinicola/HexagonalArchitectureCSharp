@@ -156,7 +156,7 @@ Routes live under `/v1` (`Api/Hosting/ApiVersions.cs`). A breaking change adds a
 - **Migrations on startup** suit one instance (see Running several instances).
 - **Versioning is by URL segment, by hand.** It needs no package. Move to Asp.Versioning when you run several versions at once and want deprecation headers.
 - **Inbound ports.** There is no `Ports/In`: the inbound port is `IDispatcher` plus the command/query types in `UseCases`. Only outbound dependencies need an interface in `Ports/Out`.
-- **Architecture tests are namespace/reference based** (NetArchTest) and `ProjectFileTests` read the `.csproj` files. They can miss exotic dependency shapes; the banned-API analyzer covers *uses* on top of them. Treat them together as the guardrail.
+- **Architecture tests are namespace/reference based** (ArchUnitNET) and `ProjectFileTests` read the `.csproj` files. They can miss exotic dependency shapes; the banned-API analyzer covers *uses* on top of them. Treat them together as the guardrail.
 
 ## Nothing to maintain for the guardrails
 
