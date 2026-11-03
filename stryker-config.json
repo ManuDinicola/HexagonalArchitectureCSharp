@@ -1,0 +1,9 @@
+{
+  "stryker-config": {
+    "project": "MyApp.Domain.csproj",
+    "test-projects": ["tests/MyApp.Domain.Tests/MyApp.Domain.Tests.csproj"],
+    "solution": "MyApp.slnx",
+    "reporters": ["html", "progress"],
+    "thresholds": { "high": 90, "low": 75, "break": 60 }
+  }
+}

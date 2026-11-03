@@ -42,10 +42,14 @@ Then add an endpoint in `MyApp.Api/Endpoints`. Read [ARCHITECTURE.md](ARCHITECTU
 ## Local gate (no CI)
 
 ```bash
-git config core.hooksPath .githooks   # once per clone
+sh scripts/setup.sh   # once per clone: enables the hook (core.hooksPath), checks the SDK, restores tools
 ```
 
 `.githooks/pre-commit` builds, runs every test, and refuses a commit that stages a guardrail file (`.editorconfig`, `Directory.Build.props`, `BannedSymbols*.txt`, `tests/MyApp.Architecture.Tests`, `AGENTS.md`, ...) unless a human sets `GUARDRAIL_CHANGE=1`. `.claude/settings.json` additionally denies Claude Code edits to those files.
+
+## Coverage and mutation testing
+
+Neither runs in the gate. `sh scripts/coverage.sh` collects coverage (Cobertura XML in `TestResults/`); `sh scripts/mutation.sh` runs Stryker on the Domain with its tests (thresholds in `stryker-config.json`). Run mutation after changing a business rule.
 
 ## What fails the build
 
