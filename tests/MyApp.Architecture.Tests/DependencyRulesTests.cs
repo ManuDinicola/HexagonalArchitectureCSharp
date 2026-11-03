@@ -1,31 +1,34 @@
-using NetArchTest.Rules;
+using System.Reflection;
+using ArchUnitNET.Fluent;
+using ArchUnitNET.xUnitV3;
+using static ArchUnitNET.Fluent.ArchRuleDefinition;
 
 namespace MyApp.Architecture.Tests;
 
 public class DependencyRulesTests
 {
-    private static void AssertNoViolations(TestResult result) =>
-        result.IsSuccessful.ShouldBeTrue("Violating types: " + string.Join(", ", result.FailingTypeNames ?? []));
+    /// <summary>Nothing in <paramref name="from"/> may depend on these namespaces (or the ones below them).</summary>
+    private static void MustNotDependOn(Assembly from, params string[] namespaces) =>
+        Types().That().ResideInAssembly(from).Should()
+            .NotDependOnAnyTypesThat().ResideInNamespaceMatching(Layers.NamespaceOrBelow(namespaces))
+            .Check(Layers.Arch);
 
     [Fact]
     public void Domain_depends_on_nothing_of_ours()
     {
-        AssertNoViolations(Types.InAssembly(Layers.DomainAssembly).ShouldNot()
-            .HaveDependencyOnAny(Layers.Application, Layers.Infrastructure, Layers.Api).GetResult());
+        MustNotDependOn(Layers.DomainAssembly, Layers.Application, Layers.Infrastructure, Layers.Api);
     }
 
     [Fact]
     public void Application_depends_only_on_Domain()
     {
-        AssertNoViolations(Types.InAssembly(Layers.ApplicationAssembly).ShouldNot()
-            .HaveDependencyOnAny(Layers.Infrastructure, Layers.Api).GetResult());
+        MustNotDependOn(Layers.ApplicationAssembly, Layers.Infrastructure, Layers.Api);
     }
 
     [Fact]
     public void Infrastructure_does_not_depend_on_Api()
     {
-        AssertNoViolations(Types.InAssembly(Layers.InfrastructureAssembly).ShouldNot()
-            .HaveDependencyOn(Layers.Api).GetResult());
+        MustNotDependOn(Layers.InfrastructureAssembly, Layers.Api);
     }
 
     [Theory]
@@ -34,14 +37,14 @@ public class DependencyRulesTests
     [InlineData("Microsoft.Data.Sqlite")]
     public void Domain_and_Application_do_not_reference_frameworks(string forbidden)
     {
-        AssertNoViolations(Types.InAssembly(Layers.DomainAssembly).ShouldNot().HaveDependencyOn(forbidden).GetResult());
-        AssertNoViolations(Types.InAssembly(Layers.ApplicationAssembly).ShouldNot().HaveDependencyOn(forbidden).GetResult());
+        MustNotDependOn(Layers.DomainAssembly, forbidden);
+        MustNotDependOn(Layers.ApplicationAssembly, forbidden);
     }
 
     [Fact]
     public void Project_references_follow_the_hexagon()
     {
-        static string[] Refs(System.Reflection.Assembly a)
+        static string[] Refs(Assembly a)
         {
             return [.. a.GetReferencedAssemblies().Select(r => r.Name!).Where(n => n.StartsWith("MyApp.", StringComparison.Ordinal))];
         }
@@ -55,27 +58,24 @@ public class DependencyRulesTests
     [Fact]
     public void Api_uses_Infrastructure_only_through_AddInfrastructure()
     {
-        AssertNoViolations(Types.InAssembly(Layers.ApiAssembly).ShouldNot()
-            .HaveDependencyOn(Layers.InfrastructurePersistence).GetResult());
+        MustNotDependOn(Layers.ApiAssembly, Layers.InfrastructurePersistence);
     }
 
     [Fact]
     public void Api_does_not_use_outbound_ports()
     {
-        AssertNoViolations(Types.InAssembly(Layers.ApiAssembly).ShouldNot().HaveDependencyOn(Layers.PortsOut).GetResult());
+        MustNotDependOn(Layers.ApiAssembly, Layers.PortsOut);
     }
 
     [Fact]
     public void Api_does_not_use_domain_entities()
     {
-        AssertNoViolations(Types.InAssembly(Layers.ApiAssembly).ShouldNot()
-            .HaveDependencyOnAny(Layers.DomainEntityNamespaces()).GetResult());
+        MustNotDependOn(Layers.ApiAssembly, Layers.DomainEntityNamespaces());
     }
 
     [Fact]
     public void Infrastructure_does_not_use_UseCases_Messaging_or_Behaviors()
     {
-        AssertNoViolations(Types.InAssembly(Layers.InfrastructureAssembly).ShouldNot()
-            .HaveDependencyOnAny(Layers.UseCases, Layers.Messaging, Layers.Behaviors).GetResult());
+        MustNotDependOn(Layers.InfrastructureAssembly, Layers.UseCases, Layers.Messaging, Layers.Behaviors);
     }
 }
