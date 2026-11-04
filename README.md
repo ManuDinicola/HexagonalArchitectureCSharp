@@ -37,7 +37,7 @@ Copy the `UseCases/PlaceOrder` folder and rename it: a command (`ICommand<...>`,
 Handlers and validators are found by assembly scanning: there is nothing to register.
 Commands stage their changes through repositories (`Add`, never `Save`); the pipeline commits them once, in one transaction, and only if the handler succeeded.
 The validator only checks the shape of the request (missing fields) and points each error at its field with `Error.Target`. Limits and ranges (max lengths, quantity > 0, price scale) are business rules and live in the Domain, which reports all of them at once.
-Then add an endpoint in `MyApp.Api/Endpoints`. Read [ARCHITECTURE.md](ARCHITECTURE.md) for where things go.
+Then add an endpoint in `MyApp.Api/Endpoints`. Read [ARCHITECTURE.md](ARCHITECTURE.md) for where things go, and [docs/folder-structure.md](docs/folder-structure.md) for a tour of every folder.
 
 ## Local gate (no CI)
 
