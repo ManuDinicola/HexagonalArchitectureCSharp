@@ -1,0 +1,6 @@
+<Project>
+  <!--
+    Intentionally empty: this sample is not part of MyApp.slnx and must not inherit the template's
+    analyzers or TreatWarningsAsErrors from the root Directory.Build.props.
+  -->
+</Project>
